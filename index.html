@@ -101,6 +101,16 @@
                 </label>
             </div>
 
+            <!-- Filter Anti-Double-Count (Jarak Penggabungan Titik) -->
+            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-1">
+                <label class="text-xs font-semibold text-white flex justify-between">
+                    <span>Gabung Titik Dekat (Saring Dobel)</span>
+                    <span id="valMergeDist" class="text-blue-400 font-bold">25 px</span>
+                </label>
+                <input type="range" id="rngMergeDist" min="0" max="100" value="25" class="w-full accent-blue-500">
+                <span class="text-[10px] text-gray-500">Gabung titik yang tumpang tindih akibat pantulan kilau besi.</span>
+            </div>
+
             <!-- Pengaturan Area Fokus (ROI) -->
             <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-2">
                 <span class="text-sm font-semibold text-white">Dimensi Kotak Fokus Pemindai</span>
@@ -178,6 +188,7 @@
         let minArea = 50; // Batas minimal disesuaikan ke 50 untuk mendeteksi objek mikro 3mm
         let maxArea = 50000;
         let isLightOnDark = false; // Default ke false (hitung objek gelap pada latar terang)
+        let mergeDist = 25; // Default jarak (piksel) untuk menyatukan titik dobel hasil refleksi
 
         // --- DOM ELEMENTS ---
         const ui = {
@@ -198,6 +209,8 @@
             // Inputs
             chkAuto: document.getElementById('chkAuto'),
             chkAspect: document.getElementById('chkAspect'),
+            rngMergeDist: document.getElementById('rngMergeDist'),
+            valMergeDist: document.getElementById('valMergeDist'),
             rngRoiW: document.getElementById('rngRoiW'),
             valRoiW: document.getElementById('valRoiW'),
             rngRoiH: document.getElementById('rngRoiH'),
@@ -356,6 +369,12 @@
             triggerProcess();
         });
 
+        ui.rngMergeDist.addEventListener('input', (e) => {
+            mergeDist = parseInt(e.target.value);
+            ui.valMergeDist.innerText = mergeDist + " px";
+            triggerProcess();
+        });
+
         ui.rngRoiW.addEventListener('input', (e) => {
             roiWidthPercent = parseInt(e.target.value);
             ui.valRoiW.innerText = roiWidthPercent + "%";
@@ -474,7 +493,8 @@
                 hierarchy = new cv.Mat();
                 cv.findContours(roiThresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-                let count = 0;
+                // Koleksi titik pusat deteksi awal
+                let rawCenters = [];
                 for (let i = 0; i < contours.size(); ++i) {
                     let contour = contours.get(i);
                     let area = cv.contourArea(contour);
@@ -484,7 +504,6 @@
                         if (aspectFilter) {
                             let boundRect = cv.boundingRect(contour);
                             let aspect = boundRect.width / boundRect.height;
-                            // Jika objek sangat lonjong/panjang (seperti garis tepi) abaikan
                             if (aspect > 4.0 || aspect < 0.25) {
                                 continue;
                             }
@@ -495,13 +514,42 @@
                             // Petakan kembali koordinat lokal ROI ke koordinat gambar global
                             let cx = (M.m10 / M.m00) + roiX;
                             let cy = (M.m01 / M.m00) + roiY;
-                            
-                            // Gambar titik penanda objek yang valid
-                            cv.circle(src, new cv.Point(cx, cy), 4, [0, 255, 0, 255], -1); 
-                            cv.circle(src, new cv.Point(cx, cy), 6, [0, 0, 0, 255], 2);  
-                            count++;
+                            rawCenters.push({ x: cx, y: cy });
                         }
                     }
+                }
+
+                // FILTER ANTI-DOUBLE-COUNT: Menggabungkan titik yang terlalu dekat
+                let finalCenters = [];
+                for (let i = 0; i < rawCenters.length; i++) {
+                    let pt = rawCenters[i];
+                    let merged = false;
+                    for (let j = 0; j < finalCenters.length; j++) {
+                        let fPt = finalCenters[j];
+                        // Hitung jarak Euclidean antar titik
+                        let dist = Math.hypot(pt.x - fPt.x, pt.y - fPt.y);
+                        
+                        if (dist < mergeDist) {
+                            // Rata-ratakan koordinat untuk mendapatkan titik pusat tunggal yang presisi
+                            fPt.x = (fPt.x * fPt.count + pt.x) / (fPt.count + 1);
+                            fPt.y = (fPt.y * fPt.count + pt.y) / (fPt.count + 1);
+                            fPt.count += 1;
+                            merged = true;
+                            break;
+                        }
+                    }
+                    if (!merged) {
+                        finalCenters.push({ x: pt.x, y: pt.y, count: 1 });
+                    }
+                }
+
+                // Gambar penanda final dan hitung jumlah objek akhir
+                let count = 0;
+                for (let i = 0; i < finalCenters.length; i++) {
+                    let pt = finalCenters[i];
+                    cv.circle(src, new cv.Point(pt.x, pt.y), 4, [0, 255, 0, 255], -1); 
+                    cv.circle(src, new cv.Point(pt.x, pt.y), 6, [0, 0, 0, 255], 2);  
+                    count++;
                 }
 
                 // GAMBAR VISUALISASI KOTAK FOKUS (Real Scanner Style)
