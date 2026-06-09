@@ -29,6 +29,12 @@
     <!-- AREA UTAMA -->
     <div class="flex-1 relative overflow-hidden flex justify-center items-center bg-black">
         
+        <!-- Banner Notifikasi Kustom -->
+        <div id="toastNotification" class="hidden absolute top-4 left-4 right-4 bg-red-600 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 z-30 animate-bounce text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12 y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+            <span id="toastText">Notifikasi</span>
+        </div>
+
         <!-- Loading Screen -->
         <div id="loadingScreen" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-20">
             <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mb-4"></div>
@@ -79,17 +85,42 @@
         <!-- PENGATURAN MELAYANG (FLOATING) -->
         <div id="settingsPanel" class="hidden absolute bottom-full left-3 right-3 mb-3 bg-gray-950/95 backdrop-blur-md p-4 rounded-2xl border border-gray-800 flex flex-col gap-3 shadow-2xl z-20 max-h-[70vh] overflow-y-auto">
             <div class="flex justify-between items-center pb-2 border-b border-gray-800">
-                <h3 class="font-semibold text-gray-200 flex items-center gap-2">Pengaturan Akurasi</h3>
+                <h3 class="font-semibold text-gray-200 flex items-center gap-2">Pengaturan & Kalibrasi AI</h3>
+            </div>
+
+            <!-- DATABASE & KALIBRASI PART (MATERIAL & DIMENSI) -->
+            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Database & Kalibrasi Part</span>
+                
+                <!-- Pilihan Material -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-gray-400">Jenis Material Part</label>
+                    <select id="selMaterial" class="bg-gray-950 text-white text-sm rounded-lg block w-full p-2 border border-gray-700 outline-none">
+                        <option value="metal_shiny">Logam Silver (Mengkilap/Chrome)</option>
+                        <option value="metal_dark">Logam Gelap (Hitam/Dof/Oksida)</option>
+                        <option value="plastic_light">Plastik Solid Terang (Putih/Kuning/Merah)</option>
+                        <option value="plastic_dark" selected>Plastik Solid Gelap (Hitam/Abu/Biru Tua)</option>
+                    </select>
+                </div>
+
+                <!-- Slider Dimensi Panjang Benda (3mm - 15mm) -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-gray-400 flex justify-between">
+                        <span>Dimensi Panjang Part</span>
+                        <span id="valPartDim" class="text-blue-400 font-bold">5 mm</span>
+                    </label>
+                    <input type="range" id="rngPartDim" min="3" max="15" value="5" class="w-full accent-blue-500">
+                    <span class="text-[10px] text-gray-500">Menghitung rasio piksel ke milimeter berdasarkan jarak kamera Anda secara cerdas.</span>
+                </div>
             </div>
 
             <!-- PRESET JARAK KAMERA -->
             <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-2">
-                <span class="text-sm font-semibold text-white">Preset Jarak Kamera</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Konfigurasi Jarak & Fokus</span>
                 <div class="flex gap-2">
                     <button id="btnDistNear" class="flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-400">Dekat (&lt; 15cm)</button>
                     <button id="btnDistFar" class="flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400">Jauh (15 - 30cm)</button>
                 </div>
-                <span class="text-[10px] text-gray-500">Mode "Jauh" mengoptimalkan mesin AI untuk membaca partikel mikro / objek yang berjarak jauh dari kamera.</span>
             </div>
 
             <!-- FITUR: PISAH OBJEK MENEMPEL (CLUMP SPLITTING) -->
@@ -108,8 +139,8 @@
                 <div id="splitControlsContainer" class="flex flex-col gap-2 pt-1 border-t border-gray-800/50">
                     <div class="flex gap-4">
                         <div class="flex-1 flex flex-col gap-1">
-                            <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Ukuran 1 Part</span><span id="valPartSize">80 px</span></label>
-                            <input type="range" id="rngPartSize" min="10" max="5000" step="10" value="80" class="w-full accent-blue-500">
+                            <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Ukuran 1 Part (Auto)</span><span id="valPartSize">80 px</span></label>
+                            <input type="range" id="rngPartSize" min="10" max="5000" step="10" value="80" class="w-full accent-blue-500" disabled>
                         </div>
                         <div class="flex-1 flex flex-col gap-1">
                             <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Sensitivitas Pisah</span><span id="valSplitSens">40%</span></label>
@@ -119,7 +150,7 @@
                 </div>
             </div>
 
-            <!-- FITUR BARU: SARING BAYANGAN FLASHLIGHT/SENTER -->
+            <!-- FITUR: SARING BAYANGAN FLASHLIGHT/SENTER -->
             <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-2">
                 <div class="flex items-center justify-between">
                     <div class="flex flex-col">
@@ -137,7 +168,6 @@
                         <span>Ambang Batas Saring</span><span id="valShadowThresh">12 StdDev</span>
                     </label>
                     <input type="range" id="rngShadowThresh" min="1" max="80" value="12" class="w-full accent-blue-500">
-                    <span class="text-[10px] text-gray-500">Makin tinggi nilai, bayangan yang pudar makin tidak akan dihitung.</span>
                 </div>
             </div>
 
@@ -172,7 +202,6 @@
                     <span id="valMergeDist" class="text-blue-400 font-bold">10 px</span>
                 </label>
                 <input type="range" id="rngMergeDist" min="0" max="100" value="10" class="w-full accent-blue-500">
-                <span class="text-[10px] text-gray-500">Gabung titik yang tumpang tindih akibat pantulan kilau besi.</span>
             </div>
 
             <!-- Pengaturan Area Fokus (ROI) -->
@@ -202,18 +231,12 @@
             <div class="flex gap-4 bg-gray-900 p-3 rounded-lg border border-gray-800">
                 <div class="flex-1 flex flex-col gap-1">
                     <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Abaikan Debu</span><span id="valMinArea">10</span></label>
-                    <input type="range" id="rngMinArea" min="5" max="2000" value="10" class="w-full accent-blue-500">
+                    <input type="range" id="rngMinArea" min="5" max="2000" value="10" class="w-full accent-blue-500" disabled>
                 </div>
                 <div class="flex-1 flex flex-col gap-1">
                     <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Batas Maks</span><span id="valMaxArea">50000</span></label>
-                    <input type="range" id="rngMaxArea" min="100" max="100000" step="500" value="50000" class="w-full accent-blue-500">
+                    <input type="range" id="rngMaxArea" min="100" max="100000" step="500" value="50000" class="w-full accent-blue-500" disabled>
                 </div>
-            </div>
-
-            <!-- Pemilih Warna Objek -->
-            <div class="flex gap-2 pt-1">
-                <button id="btnLightObj" class="flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400">⚪ Objek Terang</button>
-                <button id="btnDarkObj" class="flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-500">⚫ Objek Gelap</button>
             </div>
         </div>
 
@@ -251,10 +274,12 @@
         let roiWidthPercent = 70; // Default lebar kotak fokus 70%
         let roiHeightPercent = 70; // Default tinggi kotak fokus 70%
         let thresholdValue = 128;
-        let minArea = 10; // Default minimal diatur sangat kecil untuk 30cm
+        
+        // Dynamic Parameters calculated by Calibration Database
+        let minArea = 10;
         let maxArea = 50000;
-        let isLightOnDark = false; // Default ke false (hitung objek gelap pada latar terang)
-        let mergeDist = 10; // Jarak gabung minimal 10px untuk mode jarak jauh agar tidak tumpang tindih
+        let isLightOnDark = false; 
+        let mergeDist = 10; 
         
         // Clump Splitting Variables (Fitur Pemisah Objek Menempel)
         let splitTouchEnabled = true;
@@ -265,66 +290,98 @@
         let shadowFilterEnabled = true;
         let shadowThreshold = 12; // Ambang batas standard deviasi untuk menyaring bayangan
 
-        // --- DOM ELEMENTS ---
+        // Calibration Database Variables
+        let selectedMaterial = "plastic_dark"; // Default: Plastik Solid Gelap
+        let partDimensionMm = 5; // Default: 5 mm
+
+        // --- DOM ELEMENTS (Lazy Getters untuk menghindari Race Condition) ---
         const ui = {
-            loading: document.getElementById('loadingScreen'),
-            empty: document.getElementById('emptyScreen'),
-            liveContainer: document.getElementById('liveContainer'),
-            video: document.getElementById('videoElement'),
-            camSelect: document.getElementById('cameraSelect'),
-            btnCapture: document.getElementById('btnCapture'),
-            btnTorch: document.getElementById('btnTorch'),
-            imgSrc: document.getElementById('sourceImage'),
-            canvas: document.getElementById('resultCanvas'),
-            badge: document.getElementById('resultBadge'),
-            countText: document.getElementById('objCountText'),
-            fileInput: document.getElementById('fileInput'),
-            btnStartCam: document.getElementById('btnStartCamera'),
-            btnSettings: document.getElementById('btnToggleSettings'),
-            panelSettings: document.getElementById('settingsPanel'),
+            get loading() { return document.getElementById('loadingScreen'); },
+            get empty() { return document.getElementById('emptyScreen'); },
+            get liveContainer() { return document.getElementById('liveContainer'); },
+            get video() { return document.getElementById('videoElement'); },
+            get camSelect() { return document.getElementById('cameraSelect'); },
+            get btnCapture() { return document.getElementById('btnCapture'); },
+            get btnTorch() { return document.getElementById('btnTorch'); },
+            get imgSrc() { return document.getElementById('sourceImage'); },
+            get canvas() { return document.getElementById('resultCanvas'); },
+            get badge() { return document.getElementById('resultBadge'); },
+            get countText() { return document.getElementById('objCountText'); },
+            get fileInput() { return document.getElementById('fileInput'); },
+            get btnStartCam() { return document.getElementById('btnStartCamera'); },
+            get btnSettings() { return document.getElementById('btnToggleSettings'); },
+            get panelSettings() { return document.getElementById('settingsPanel'); },
             // Preset Jarak
-            btnNear: document.getElementById('btnDistNear'),
-            btnFar: document.getElementById('btnDistFar'),
+            get btnNear() { return document.getElementById('btnDistNear'); },
+            get btnFar() { return document.getElementById('btnDistFar'); },
             // Clump Splitting Elements
-            chkSplitTouch: document.getElementById('chkSplitTouch'),
-            rngPartSize: document.getElementById('rngPartSize'),
-            valPartSize: document.getElementById('valPartSize'),
-            rngSplitSens: document.getElementById('rngSplitSens'),
-            valSplitSens: document.getElementById('valSplitSens'),
+            get chkSplitTouch() { return document.getElementById('chkSplitTouch'); },
+            get rngPartSize() { return document.getElementById('rngPartSize'); },
+            get valPartSize() { return document.getElementById('valPartSize'); },
+            get rngSplitSens() { return document.getElementById('rngSplitSens'); },
+            get valSplitSens() { return document.getElementById('valSplitSens'); },
             // Shadow Filter Elements
-            chkShadow: document.getElementById('chkShadow'),
-            shadowControls: document.getElementById('shadowControlsContainer'),
-            rngShadowThresh: document.getElementById('rngShadowThresh'),
-            valShadowThresh: document.getElementById('valShadowThresh'),
+            get chkShadow() { return document.getElementById('chkShadow'); },
+            get shadowControls() { return document.getElementById('shadowControlsContainer'); },
+            get rngShadowThresh() { return document.getElementById('rngShadowThresh'); },
+            get valShadowThresh() { return document.getElementById('valShadowThresh'); },
+            // Calibration Database Elements
+            get selMaterial() { return document.getElementById('selMaterial'); },
+            get rngPartDim() { return document.getElementById('rngPartDim'); },
+            get valPartDim() { return document.getElementById('valPartDim'); },
+            // Toast Notification Banner
+            get toast() { return document.getElementById('toastNotification'); },
+            get toastText() { return document.getElementById('toastText'); },
             // Inputs
-            chkAuto: document.getElementById('chkAuto'),
-            chkAspect: document.getElementById('chkAspect'),
-            rngMergeDist: document.getElementById('rngMergeDist'),
-            valMergeDist: document.getElementById('valMergeDist'),
-            rngRoiW: document.getElementById('rngRoiW'),
-            valRoiW: document.getElementById('valRoiW'),
-            rngRoiH: document.getElementById('rngRoiH'),
-            valRoiH: document.getElementById('valRoiH'),
-            manualThreshCont: document.getElementById('manualThreshContainer'),
-            rngThresh: document.getElementById('rngThresh'),
-            valThresh: document.getElementById('valThresh'),
-            rngMinArea: document.getElementById('rngMinArea'),
-            valMinArea: document.getElementById('valMinArea'),
-            rngMaxArea: document.getElementById('rngMaxArea'),
-            valMaxArea: document.getElementById('valMaxArea'),
-            btnLight: document.getElementById('btnLightObj'),
-            btnDark: document.getElementById('btnDarkObj'),
+            get chkAuto() { return document.getElementById('chkAuto'); },
+            get chkAspect() { return document.getElementById('chkAspect'); },
+            get rngMergeDist() { return document.getElementById('rngMergeDist'); },
+            get valMergeDist() { return document.getElementById('valMergeDist'); },
+            get rngRoiW() { return document.getElementById('rngRoiW'); },
+            get valRoiW() { return document.getElementById('valRoiW'); },
+            get rngRoiH() { return document.getElementById('rngRoiH'); },
+            get valRoiH() { return document.getElementById('valRoiH'); },
+            get manualThreshCont() { return document.getElementById('manualThreshContainer'); },
+            get rngThresh() { return document.getElementById('rngThresh'); },
+            get valThresh() { return document.getElementById('valThresh'); },
+            get rngMinArea() { return document.getElementById('rngMinArea'); },
+            get valMinArea() { return document.getElementById('valMinArea'); },
+            get rngMaxArea() { return document.getElementById('rngMaxArea'); },
+            get valMaxArea() { return document.getElementById('valMaxArea'); },
+            get btnLight() { return document.getElementById('btnLightObj'); },
+            get getBtnDark() { return document.getElementById('btnDarkObj'); },
         };
 
-        // --- INIT OPENCV ---
-        function onOpenCvReady() {
-            cvReady = true;
-            ui.loading.classList.add('hidden');
-            ui.empty.classList.remove('hidden');
+        // --- CUSTOM TOAST NOTIFICATION ---
+        function showNotification(message) {
+            if (!ui.toastText || !ui.toast) return;
+            ui.toastText.innerText = message;
+            ui.toast.classList.remove('hidden');
+            setTimeout(() => {
+                if (ui.toast) ui.toast.classList.add('hidden');
+            }, 5000);
         }
+
+        // --- INIT OPENCV (Menggunakan penangguhan aman jika DOM belum siap) ---
+        window.onOpenCvReady = function() {
+            cvReady = true;
+            
+            const runOnLoad = () => {
+                if (ui.loading) ui.loading.classList.add('hidden');
+                if (ui.empty) ui.empty.classList.remove('hidden');
+                updateCalibration();
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', runOnLoad);
+            } else {
+                runOnLoad();
+            }
+        };
 
         // --- UI UPDATES ---
         function updateScreenState() {
+            if (!ui.empty) return;
             ui.empty.classList.add('hidden');
             ui.liveContainer.classList.add('hidden');
             ui.canvas.classList.add('hidden');
@@ -339,56 +396,89 @@
                 ui.empty.classList.remove('hidden');
             }
 
-            ui.btnStartCam.querySelector('span').innerText = isLiveMode ? "Tutup Kamera" : "Kamera Langsung";
+            if (ui.btnStartCam) {
+                ui.btnStartCam.querySelector('span').innerText = isLiveMode ? "Tutup Kamera" : "Kamera Langsung";
+            }
         }
 
-        ui.btnSettings.addEventListener('click', () => {
-            isSettingsOpen = !isSettingsOpen;
-            if (isSettingsOpen) {
-                ui.panelSettings.classList.remove('hidden');
-                ui.btnSettings.classList.replace('bg-gray-800', 'bg-blue-600');
-                ui.btnSettings.classList.replace('text-gray-300', 'text-white');
-            } else {
-                ui.panelSettings.classList.add('hidden');
-                ui.btnSettings.classList.replace('bg-blue-600', 'bg-gray-800');
-                ui.btnSettings.classList.replace('text-white', 'text-gray-300');
-            }
-        });
+        // --- ALGORITMA DATABASE KALIBRASI PINTAR ---
+        function updateCalibration() {
+            if (!ui.selMaterial || !ui.rngPartDim) return; // Mencegah crash jika DOM belum siap
+            
+            selectedMaterial = ui.selMaterial.value;
+            partDimensionMm = parseInt(ui.rngPartDim.value);
+            
+            // 1. Hitung skala piksel per milimeter (pxPerMm) secara dinamis berdasarkan Jarak Kamera
+            let pxPerMm = (cameraDistanceMode === 'far') ? 4.5 : 12.0;
+            
+            // 2. Hitung Ukuran Teoritis 1 Part (Luas Area dalam piksel)
+            let partRadiusPx = (partDimensionMm / 2) * pxPerMm;
+            let calculatedArea = Math.round(Math.PI * Math.pow(partRadiusPx, 2));
+            
+            // Simpan estimasi ukuran 1 part untuk clump splitting
+            partSize = calculatedArea;
+            if (ui.rngPartSize) ui.rngPartSize.value = partSize;
+            if (ui.valPartSize) ui.valPartSize.innerText = partSize + " px";
 
-        // --- PRESET JARAK KAMERA LOGIC ---
-        function setDistancePreset(mode) {
-            cameraDistanceMode = mode;
-            if (mode === 'near') {
-                minArea = 50;
-                mergeDist = 25;
-                partSize = 300;
-                
-                ui.btnNear.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400";
-                ui.btnFar.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-400";
-            } else {
-                minArea = 10;
-                mergeDist = 10;
-                partSize = 80;
-                
-                ui.btnFar.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400";
-                ui.btnNear.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-400";
+            // 3. Set batas dinamis (Min/Max Area) berdasarkan deviasi ukuran part (+- 40%)
+            minArea = Math.round(calculatedArea * 0.4);
+            if (minArea < 5) minArea = 5; 
+            
+            maxArea = Math.round(calculatedArea * 3.5); 
+
+            // Perbarui slider parameter manual
+            if (ui.rngMinArea) ui.rngMinArea.value = minArea;
+            if (ui.valMinArea) ui.valMinArea.innerText = minArea;
+            if (ui.rngMaxArea) ui.rngMaxArea.value = maxArea;
+            if (ui.valMaxArea) ui.valMaxArea.innerText = maxArea;
+
+            // 4. Set parameter khusus berdasarkan tipe MATERIAL benda
+            switch(selectedMaterial) {
+                case 'metal_shiny': // Logam Silver Mengkilap
+                    isLightOnDark = false; 
+                    mergeDist = (cameraDistanceMode === 'far') ? 14 : 28; 
+                    shadowFilterEnabled = true;
+                    shadowThreshold = 14; 
+                    break;
+                    
+                case 'metal_dark': // Logam Gelap (Hitam)
+                    isLightOnDark = true; 
+                    mergeDist = (cameraDistanceMode === 'far') ? 8 : 16; 
+                    shadowFilterEnabled = true;
+                    shadowThreshold = 10;
+                    break;
+                    
+                case 'plastic_light': // Plastik Terang
+                    isLightOnDark = false; 
+                    mergeDist = (cameraDistanceMode === 'far') ? 6 : 12; 
+                    shadowFilterEnabled = false; 
+                    shadowThreshold = 8;
+                    break;
+                    
+                case 'plastic_dark': // Plastik Gelap
+                default:
+                    isLightOnDark = true; 
+                    mergeDist = (cameraDistanceMode === 'far') ? 6 : 12;
+                    shadowFilterEnabled = false;
+                    shadowThreshold = 8;
+                    break;
             }
+
+            // Sync parameter ke elemen input kontrol manual
+            if (ui.rngMergeDist) ui.rngMergeDist.value = mergeDist;
+            if (ui.valMergeDist) ui.valMergeDist.innerText = mergeDist + " px";
+            if (ui.chkShadow) ui.chkShadow.checked = shadowFilterEnabled;
+            if (ui.shadowControls) ui.shadowControls.classList.toggle('hidden', !shadowFilterEnabled);
+            if (ui.rngShadowThresh) ui.rngShadowThresh.value = shadowThreshold;
+            if (ui.valShadowThresh) ui.valShadowThresh.innerText = shadowThreshold + " StdDev";
             
-            ui.rngMinArea.value = minArea;
-            ui.valMinArea.innerText = minArea;
-            ui.rngMergeDist.value = mergeDist;
-            ui.valMergeDist.innerText = mergeDist + " px";
-            ui.rngPartSize.value = partSize;
-            ui.valPartSize.innerText = partSize + " px";
-            
+            updateColorMode(isLightOnDark);
             triggerProcess();
         }
 
-        ui.btnNear.addEventListener('click', () => setDistancePreset('near'));
-        ui.btnFar.addEventListener('click', () => setDistancePreset('far'));
-
         // --- CAMERA LOGIC ---
         function populateCameraSelect() {
+            if (!ui.camSelect) return;
             ui.camSelect.innerHTML = '';
             
             const optBack = document.createElement('option');
@@ -418,11 +508,11 @@
                         height: { ideal: 1080 }
                     }
                 });
-                ui.video.srcObject = stream;
+                if (ui.video) ui.video.srcObject = stream;
 
                 // Cek kapabilitas senter setelah kamera menyala
                 setTimeout(async () => {
-                    if (stream) {
+                    if (stream && ui.btnTorch) {
                         const track = stream.getVideoTracks()[0];
                         try {
                             const capabilities = track.getCapabilities();
@@ -439,7 +529,8 @@
 
             } catch (err) {
                 console.error("Error start kamera", err);
-                alert("Gagal mengakses kamera. Pastikan browser mengizinkan akses kamera.");
+                // MENGGANTI ALERT LAMA: Sekarang memicu toast notifikasi yang informatif dan ramah pengguna
+                showNotification("Gagal mengakses kamera. Kemungkinan besar Anda membuka link ini dari dalam obrolan chat (seperti WhatsApp/Telegram).\n\nSilakan SALIN (copy) link di atas, lalu TEMPELKAN (paste) dan jalankan pada browser GOOGLE CHROME atau SAFARI di HP Anda agar kamera berfungsi.");
             }
         }
 
@@ -450,182 +541,32 @@
             }
             // Reset Senter status
             isTorchOn = false;
-            ui.btnTorch.classList.add('hidden');
-            ui.btnTorch.classList.replace('bg-yellow-500', 'bg-black/60');
-            ui.btnTorch.classList.replace('text-gray-900', 'text-white');
+            if (ui.btnTorch) {
+                ui.btnTorch.classList.add('hidden');
+                ui.btnTorch.classList.replace('bg-yellow-500', 'bg-black/60');
+                ui.btnTorch.classList.replace('text-gray-900', 'text-white');
+            }
         }
-
-        ui.btnStartCam.addEventListener('click', async () => {
-            if (isLiveMode) {
-                isLiveMode = false;
-                stopCamera();
-                updateScreenState();
-            } else {
-                isLiveMode = true;
-                currentImageLoaded = false;
-                updateScreenState();
-                startCamera();
-            }
-        });
-
-        ui.camSelect.addEventListener('change', (e) => {
-            currentFacingMode = e.target.value;
-            startCamera();
-        });
-
-        // Kontrol Senter HP (Torch)
-        ui.btnTorch.addEventListener('click', async () => {
-            if (!stream) return;
-            const track = stream.getVideoTracks()[0];
-            try {
-                isTorchOn = !isTorchOn;
-                await track.applyConstraints({
-                    advanced: [{ torch: isTorchOn }]
-                });
-                
-                if (isTorchOn) {
-                    ui.btnTorch.classList.replace('bg-black/60', 'bg-yellow-500');
-                    ui.btnTorch.classList.replace('text-white', 'text-gray-900');
-                } else {
-                    ui.btnTorch.classList.replace('bg-yellow-500', 'bg-black/60');
-                    ui.btnTorch.classList.replace('text-gray-900', 'text-white');
-                }
-            } catch (e) {
-                console.error("Gagal mengontrol senter:", e);
-            }
-        });
-
-        // --- CAPTURE & UPLOAD ---
-        ui.fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                isLiveMode = false;
-                stopCamera();
-                ui.imgSrc.src = URL.createObjectURL(file);
-                currentImageLoaded = true;
-                updateScreenState();
-            }
-        });
-
-        ui.btnCapture.addEventListener('click', () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = ui.video.videoWidth;
-            canvas.height = ui.video.videoHeight;
-            canvas.getContext('2d').drawImage(ui.video, 0, 0);
-            
-            ui.imgSrc.src = canvas.toDataURL('image/jpeg');
-            isLiveMode = false;
-            stopCamera();
-            currentImageLoaded = true;
-            updateScreenState();
-        });
-
-        // --- SETTINGS LISTENERS ---
-        function triggerProcess() {
-            if (currentImageLoaded && !isLiveMode) processImage();
-        }
-
-        ui.chkAuto.addEventListener('change', (e) => {
-            autoPrecision = e.target.checked;
-            ui.manualThreshCont.classList.toggle('hidden', autoPrecision);
-            triggerProcess();
-        });
-
-        ui.chkAspect.addEventListener('change', (e) => {
-            aspectFilter = e.target.checked;
-            triggerProcess();
-        });
-
-        ui.chkSplitTouch.addEventListener('change', (e) => {
-            splitTouchEnabled = e.target.checked;
-            document.getElementById('splitControlsContainer').classList.toggle('hidden', !splitTouchEnabled);
-            triggerProcess();
-        });
-
-        ui.chkShadow.addEventListener('change', (e) => {
-            shadowFilterEnabled = e.target.checked;
-            ui.shadowControls.classList.toggle('hidden', !shadowFilterEnabled);
-            triggerProcess();
-        });
-
-        ui.rngShadowThresh.addEventListener('input', (e) => {
-            shadowThreshold = parseInt(e.target.value);
-            ui.valShadowThresh.innerText = shadowThreshold + " StdDev";
-            triggerProcess();
-        });
-
-        ui.rngPartSize.addEventListener('input', (e) => {
-            partSize = parseInt(e.target.value);
-            ui.valPartSize.innerText = partSize + " px";
-            triggerProcess();
-        });
-
-        ui.rngSplitSens.addEventListener('input', (e) => {
-            splitSensitivity = parseInt(e.target.value);
-            ui.valSplitSens.innerText = splitSensitivity + "%";
-            triggerProcess();
-        });
-
-        ui.rngMergeDist.addEventListener('input', (e) => {
-            mergeDist = parseInt(e.target.value);
-            ui.valMergeDist.innerText = mergeDist + " px";
-            triggerProcess();
-        });
-
-        ui.rngRoiW.addEventListener('input', (e) => {
-            roiWidthPercent = parseInt(e.target.value);
-            ui.valRoiW.innerText = roiWidthPercent + "%";
-            triggerProcess();
-        });
-
-        ui.rngRoiH.addEventListener('input', (e) => {
-            roiHeightPercent = parseInt(e.target.value);
-            ui.valRoiH.innerText = roiHeightPercent + "%";
-            triggerProcess();
-        });
-
-        ui.rngThresh.addEventListener('input', (e) => {
-            thresholdValue = e.target.value;
-            ui.valThresh.innerText = thresholdValue;
-            triggerProcess();
-        });
-
-        ui.rngMinArea.addEventListener('input', (e) => {
-            minArea = parseInt(e.target.value);
-            ui.valMinArea.innerText = minArea;
-            triggerProcess();
-        });
-
-        ui.rngMaxArea.addEventListener('input', (e) => {
-            maxArea = parseInt(e.target.value);
-            ui.valMaxArea.innerText = maxArea;
-            triggerProcess();
-        });
 
         function updateColorMode(isLight) {
             isLightOnDark = isLight;
             if (isLight) {
-                ui.btnLight.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400";
-                ui.btnDark.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-500";
+                if (ui.btnLight) ui.btnLight.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400";
+                if (ui.getBtnDark) ui.getBtnDark.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-500";
             } else {
-                ui.btnDark.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400";
-                ui.btnLight.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-500";
+                if (ui.getBtnDark) ui.getBtnDark.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400";
+                if (ui.btnLight) ui.btnLight.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-500";
             }
             triggerProcess();
         }
-        
-        updateColorMode(false);
-        
-        ui.btnLight.addEventListener('click', () => updateColorMode(true));
-        ui.btnDark.addEventListener('click', () => updateColorMode(false));
 
-        ui.imgSrc.addEventListener('load', () => {
-            if(cvReady) processImage();
-        });
+        function triggerProcess() {
+            if (currentImageLoaded && !isLiveMode) processImage();
+        }
 
-        // --- CORE AI PROCESSING ---
+        // --- CORE AI PROCESSING (Computer Vision) ---
         function processImage() {
-            if (!cvReady || !currentImageLoaded) return;
+            if (!cvReady || !currentImageLoaded || !ui.imgSrc || !ui.canvas) return;
             
             let img, src, gray, blurred, thresh, kernel, contours, hierarchy;
             let roiGray, roiBlurred, roiThresh;
@@ -711,7 +652,7 @@
                             }
                         }
 
-                        // BARU: Evaluasi tingkat variasi kontras di dalam kontur untuk menyaring bayangan senter
+                        // Evaluasi tingkat variasi kontras di dalam kontur untuk menyaring bayangan senter
                         if (shadowFilterEnabled) {
                             let mask = cv.Mat.zeros(roiThresh.rows, roiThresh.cols, cv.CV_8U);
                             let tempContours = new cv.MatVector();
@@ -839,8 +780,8 @@
                 }
 
                 // GAMBAR VISUALISASI KOTAK FOKUS
-                let colorBorder = [59, 130, 246, 255]; // Biru modern
-                let colorCorners = [34, 197, 94, 255]; // Hijau terang
+                let colorBorder = [59, 130, 246, 255]; 
+                let colorCorners = [34, 197, 94, 255]; 
                 
                 cv.rectangle(src, new cv.Point(roiX, roiY), new cv.Point(roiX + roiW, roiY + roiH), colorBorder, 1);
                 
@@ -859,7 +800,7 @@
                 cv.line(src, new cv.Point(roiX + roiW, roiY + roiH), new cv.Point(roiX + roiW, roiY + roiH - len), colorCorners, 3);
 
                 cv.imshow(ui.canvas, src);
-                ui.countText.innerText = count;
+                if (ui.countText) ui.countText.innerText = count;
 
             } catch (err) {
                 console.error("OpenCV Error:", err);
@@ -873,6 +814,205 @@
                 if (contours && !contours.isDeleted()) contours.delete();
                 if (hierarchy && !hierarchy.isDeleted()) hierarchy.delete();
             }
+        }
+
+        // --- INISIALISASI SETELAH DOM SELESAI DIBACA ---
+        function init() {
+            // Mencegah setup ganda jika dipicu berulang
+            if (window.proScannerInitialized) return;
+            window.proScannerInitialized = true;
+
+            // Setup event listeners secara aman
+            if (ui.btnSettings) {
+                ui.btnSettings.addEventListener('click', () => {
+                    isSettingsOpen = !isSettingsOpen;
+                    if (isSettingsOpen) {
+                        if (ui.panelSettings) ui.panelSettings.classList.remove('hidden');
+                        ui.btnSettings.classList.replace('bg-gray-800', 'bg-blue-600');
+                        ui.btnSettings.classList.replace('text-gray-300', 'text-white');
+                    } else {
+                        if (ui.panelSettings) ui.panelSettings.classList.add('hidden');
+                        ui.btnSettings.classList.replace('bg-blue-600', 'bg-gray-800');
+                        ui.btnSettings.classList.replace('text-white', 'text-gray-300');
+                    }
+                });
+            }
+
+            if (ui.btnNear) ui.btnNear.addEventListener('click', () => setDistancePreset('near'));
+            if (ui.btnFar) ui.btnFar.addEventListener('click', () => setDistancePreset('far'));
+
+            if (ui.camSelect) {
+                ui.camSelect.addEventListener('change', (e) => {
+                    currentFacingMode = e.target.value;
+                    startCamera();
+                });
+            }
+
+            if (ui.btnTorch) {
+                ui.btnTorch.addEventListener('click', async () => {
+                    if (!stream) return;
+                    const track = stream.getVideoTracks()[0];
+                    try {
+                        isTorchOn = !isTorchOn;
+                        await track.applyConstraints({
+                            advanced: [{ torch: isTorchOn }]
+                        });
+                        
+                        if (isTorchOn) {
+                            ui.btnTorch.classList.replace('bg-black/60', 'bg-yellow-500');
+                            ui.btnTorch.classList.replace('text-white', 'text-gray-900');
+                        } else {
+                            ui.btnTorch.classList.replace('bg-yellow-500', 'bg-black/60');
+                            ui.btnTorch.classList.replace('text-gray-900', 'text-white');
+                        }
+                    } catch (e) {
+                        console.error("Gagal mengontrol senter:", e);
+                        showNotification("Browser tidak mengizinkan akses ke fitur senter (flashlight) perangkat.");
+                    }
+                });
+            }
+
+            if (ui.fileInput) {
+                ui.fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        isLiveMode = false;
+                        stopCamera();
+                        ui.imgSrc.src = URL.createObjectURL(file);
+                        currentImageLoaded = true;
+                        updateScreenState();
+                    }
+                });
+            }
+
+            if (ui.btnCapture) {
+                ui.btnCapture.addEventListener('click', () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = ui.video.videoWidth;
+                    canvas.height = ui.video.videoHeight;
+                    canvas.getContext('2d').drawImage(ui.video, 0, 0);
+                    
+                    ui.imgSrc.src = canvas.toDataURL('image/jpeg');
+                    isLiveMode = false;
+                    stopCamera();
+                    currentImageLoaded = true;
+                    updateScreenState();
+                });
+            }
+
+            if (ui.chkAuto) {
+                ui.chkAuto.addEventListener('change', (e) => {
+                    autoPrecision = e.target.checked;
+                    if (ui.manualThreshCont) ui.manualThreshCont.classList.toggle('hidden', autoPrecision);
+                    triggerProcess();
+                });
+            }
+
+            if (ui.chkAspect) {
+                ui.chkAspect.addEventListener('change', (e) => {
+                    aspectFilter = e.target.checked;
+                    triggerProcess();
+                });
+            }
+
+            if (ui.chkSplitTouch) {
+                ui.chkSplitTouch.addEventListener('change', (e) => {
+                    splitTouchEnabled = e.target.checked;
+                    const container = document.getElementById('splitControlsContainer');
+                    if (container) container.classList.toggle('hidden', !splitTouchEnabled);
+                    triggerProcess();
+                });
+            }
+
+            if (ui.chkShadow) {
+                ui.chkShadow.addEventListener('change', (e) => {
+                    shadowFilterEnabled = e.target.checked;
+                    if (ui.shadowControls) ui.shadowControls.classList.toggle('hidden', !shadowFilterEnabled);
+                    triggerProcess();
+                });
+            }
+
+            if (ui.rngShadowThresh) {
+                ui.rngShadowThresh.addEventListener('input', (e) => {
+                    shadowThreshold = parseInt(e.target.value);
+                    if (ui.valShadowThresh) ui.valShadowThresh.innerText = shadowThreshold + " StdDev";
+                    triggerProcess();
+                });
+            }
+
+            if (ui.rngMergeDist) {
+                ui.rngMergeDist.addEventListener('input', (e) => {
+                    mergeDist = parseInt(e.target.value);
+                    if (ui.valMergeDist) ui.valMergeDist.innerText = mergeDist + " px";
+                    triggerProcess();
+                });
+            }
+
+            if (ui.rngRoiW) {
+                ui.rngRoiW.addEventListener('input', (e) => {
+                    roiWidthPercent = parseInt(e.target.value);
+                    if (ui.valRoiW) ui.valRoiW.innerText = roiWidthPercent + "%";
+                    triggerProcess();
+                });
+            }
+
+            if (ui.rngRoiH) {
+                ui.rngRoiH.addEventListener('input', (e) => {
+                    roiHeightPercent = parseInt(e.target.value);
+                    if (ui.valRoiH) ui.valRoiH.innerText = roiHeightPercent + "%";
+                    triggerProcess();
+                });
+            }
+
+            if (ui.rngThresh) {
+                ui.rngThresh.addEventListener('input', (e) => {
+                    thresholdValue = e.target.value;
+                    if (ui.valThresh) ui.valThresh.innerText = thresholdValue;
+                    triggerProcess();
+                });
+            }
+
+            if (ui.btnLight) ui.btnLight.addEventListener('click', () => updateColorMode(true));
+            if (ui.getBtnDark) ui.getBtnDark.addEventListener('click', () => updateColorMode(false));
+
+            if (ui.imgSrc) {
+                ui.imgSrc.addEventListener('load', () => {
+                    if(cvReady) processImage();
+                });
+            }
+
+            if (ui.btnStartCam) {
+                ui.btnStartCam.addEventListener('click', async () => {
+                    if (isLiveMode) {
+                        isLiveMode = false;
+                        stopCamera();
+                        updateScreenState();
+                    } else {
+                        isLiveMode = true;
+                        currentImageLoaded = false;
+                        updateScreenState();
+                        startCamera();
+                    }
+                });
+            }
+
+            if (ui.selMaterial) ui.selMaterial.addEventListener('change', updateCalibration);
+            if (ui.rngPartDim) {
+                ui.rngPartDim.addEventListener('input', (e) => {
+                    if (ui.valPartDim) ui.valPartDim.innerText = e.target.value + " mm";
+                    updateCalibration();
+                });
+            }
+
+            // Inisialisasi awal database kalibrasi secara aman
+            updateCalibration();
+        }
+
+        // Jalankan init() saat dokumen HTML telah siap dibaca browser
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
         }
     </script>
 </body>
