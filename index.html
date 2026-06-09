@@ -72,11 +72,12 @@
     <div class="relative bg-gray-900 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.5)] p-3 flex flex-col gap-3 z-10">
         
         <!-- PENGATURAN MELAYANG (FLOATING) -->
-        <div id="settingsPanel" class="hidden absolute bottom-full left-3 right-3 mb-3 bg-gray-950/95 backdrop-blur-md p-4 rounded-2xl border border-gray-800 flex flex-col gap-3 shadow-2xl z-20">
+        <div id="settingsPanel" class="hidden absolute bottom-full left-3 right-3 mb-3 bg-gray-950/95 backdrop-blur-md p-4 rounded-2xl border border-gray-800 flex flex-col gap-3 shadow-2xl z-20 max-h-[70vh] overflow-y-auto">
             <div class="flex justify-between items-center pb-2 border-b border-gray-800">
                 <h3 class="font-semibold text-gray-200 flex items-center gap-2">Pengaturan Akurasi</h3>
             </div>
 
+            <!-- Auto Akurasi Switch -->
             <div class="flex items-center justify-between bg-gray-900 p-3 rounded-lg border border-gray-800">
                 <div class="flex flex-col">
                     <span class="text-sm font-semibold text-white">Auto Akurasi (Adaptif)</span>
@@ -88,14 +89,43 @@
                 </label>
             </div>
 
-            <div id="manualThreshContainer" class="hidden flex flex-col gap-1">
+            <!-- Filter Garis Tipis (Aspect Ratio Filter) -->
+            <div class="flex items-center justify-between bg-gray-900 p-3 rounded-lg border border-gray-800">
+                <div class="flex flex-col">
+                    <span class="text-sm font-semibold text-white">Saring Garis Tipis & Panjang</span>
+                    <span class="text-[11px] text-gray-500">Abaikan tepi meja / sisi luar pad</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="chkAspect" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            <!-- Pengaturan Area Fokus (ROI) -->
+            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-2">
+                <span class="text-sm font-semibold text-white">Dimensi Kotak Fokus Pemindai</span>
+                <div class="flex gap-4">
+                    <div class="flex-1 flex flex-col gap-1">
+                        <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Lebar Fokus</span><span id="valRoiW">70%</span></label>
+                        <input type="range" id="rngRoiW" min="20" max="100" value="70" class="w-full accent-blue-500">
+                    </div>
+                    <div class="flex-1 flex flex-col gap-1">
+                        <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Tinggi Fokus</span><span id="valRoiH">70%</span></label>
+                        <input type="range" id="rngRoiH" min="20" max="100" value="70" class="w-full accent-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Threshold Slider -->
+            <div id="manualThreshContainer" class="hidden flex flex-col gap-1 bg-gray-900 p-3 rounded-lg border border-gray-800">
                 <label class="text-xs font-medium text-gray-400 flex justify-between">
                     <span>Sensitivitas Manual</span><span id="valThresh">128</span>
                 </label>
                 <input type="range" id="rngThresh" min="0" max="255" value="128" class="w-full accent-blue-500">
             </div>
 
-            <div class="flex gap-4">
+            <!-- Ukuran Objek Slider -->
+            <div class="flex gap-4 bg-gray-900 p-3 rounded-lg border border-gray-800">
                 <div class="flex-1 flex flex-col gap-1">
                     <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Abaikan Debu</span><span id="valMinArea">50</span></label>
                     <input type="range" id="rngMinArea" min="5" max="2000" value="50" class="w-full accent-blue-500">
@@ -106,7 +136,8 @@
                 </div>
             </div>
 
-            <div class="flex gap-2 pt-2">
+            <!-- Pemilih Warna Objek -->
+            <div class="flex gap-2 pt-1">
                 <button id="btnLightObj" class="flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400">⚪ Objek Terang</button>
                 <button id="btnDarkObj" class="flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-500">⚫ Objek Gelap</button>
             </div>
@@ -140,6 +171,9 @@
         // Settings Variables
         let isSettingsOpen = false;
         let autoPrecision = true;
+        let aspectFilter = true; // Saring kontur garis panjang/tipis secara default
+        let roiWidthPercent = 70; // Default lebar kotak fokus 70%
+        let roiHeightPercent = 70; // Default tinggi kotak fokus 70%
         let thresholdValue = 128;
         let minArea = 50; // Batas minimal disesuaikan ke 50 untuk mendeteksi objek mikro 3mm
         let maxArea = 50000;
@@ -163,6 +197,11 @@
             panelSettings: document.getElementById('settingsPanel'),
             // Inputs
             chkAuto: document.getElementById('chkAuto'),
+            chkAspect: document.getElementById('chkAspect'),
+            rngRoiW: document.getElementById('rngRoiW'),
+            valRoiW: document.getElementById('valRoiW'),
+            rngRoiH: document.getElementById('rngRoiH'),
+            valRoiH: document.getElementById('valRoiH'),
             manualThreshCont: document.getElementById('manualThreshContainer'),
             rngThresh: document.getElementById('rngThresh'),
             valThresh: document.getElementById('valThresh'),
@@ -312,6 +351,23 @@
             triggerProcess();
         });
 
+        ui.chkAspect.addEventListener('change', (e) => {
+            aspectFilter = e.target.checked;
+            triggerProcess();
+        });
+
+        ui.rngRoiW.addEventListener('input', (e) => {
+            roiWidthPercent = parseInt(e.target.value);
+            ui.valRoiW.innerText = roiWidthPercent + "%";
+            triggerProcess();
+        });
+
+        ui.rngRoiH.addEventListener('input', (e) => {
+            roiHeightPercent = parseInt(e.target.value);
+            ui.valRoiH.innerText = roiHeightPercent + "%";
+            triggerProcess();
+        });
+
         ui.rngThresh.addEventListener('input', (e) => {
             thresholdValue = e.target.value;
             ui.valThresh.innerText = thresholdValue;
@@ -358,6 +414,7 @@
             if (!cvReady || !currentImageLoaded) return;
             
             let img, src, gray, blurred, thresh, kernel, contours, hierarchy;
+            let roiGray, roiBlurred, roiThresh;
             
             try {
                 img = cv.imread(ui.imgSrc);
@@ -373,53 +430,101 @@
                 }
                 img.delete();
 
+                // Hitung Dimensi Region of Interest (Kotak Fokus)
+                let roiW = Math.round(src.cols * (roiWidthPercent / 100));
+                let roiH = Math.round(src.rows * (roiHeightPercent / 100));
+                let roiX = Math.round((src.cols - roiW) / 2);
+                let roiY = Math.round((src.rows - roiH) / 2);
+
+                // Proteksi batas koordinat agar OpenCV tidak crash (out of bounds)
+                if (roiX < 0) roiX = 0;
+                if (roiY < 0) roiY = 0;
+                if (roiX + roiW > src.cols) roiW = src.cols - roiX;
+                if (roiY + roiH > src.rows) roiH = src.rows - roiY;
+
+                let rectRoi = new cv.Rect(roiX, roiY, roiW, roiH);
+
                 gray = new cv.Mat();
                 cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
 
-                // OPTIMASI: Mengurangi ukuran Median Blur menjadi 5 agar part mini 3mm tidak ikut buram/hilang
-                blurred = new cv.Mat();
-                cv.medianBlur(gray, blurred, 5);
+                // Ambil ROI (hanya area di dalam kotak fokus)
+                roiGray = gray.roi(rectRoi);
 
-                thresh = new cv.Mat();
-                
+                // OPTIMASI: Median Blur 5x5 pada area fokus saja
+                roiBlurred = new cv.Mat();
+                cv.medianBlur(roiGray, roiBlurred, 5);
+
+                roiThresh = new cv.Mat();
                 if (autoPrecision) {
-                    // OPTIMASI: Mengurangi ukuran blok analisis adaptif menjadi 15 (sebelumnya 31)
-                    // untuk mendeteksi kontur objek mikro dengan akurasi yang lebih tajam
+                    // Adaptive threshold pada area dalam kotak fokus
                     let adaptiveMethod = cv.ADAPTIVE_THRESH_GAUSSIAN_C;
                     let thresholdType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
-                    cv.adaptiveThreshold(blurred, thresh, 255, adaptiveMethod, thresholdType, 15, 5);
+                    cv.adaptiveThreshold(roiBlurred, roiThresh, 255, adaptiveMethod, thresholdType, 15, 5);
                 } else {
                     let threshType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
-                    cv.threshold(blurred, thresh, parseInt(thresholdValue), 255, threshType);
+                    cv.threshold(roiBlurred, roiThresh, parseInt(thresholdValue), 255, threshType);
                 }
 
-                // OPTIMASI: Menggunakan kernel morfologi 3x3 (sebelumnya 5x5)
-                // agar ring kecil/pin tipis tidak terhapus selama proses pembersihan noise
+                // Morfologi Closing & Opening untuk membersihkan noise di dalam ROI
                 kernel = cv.Mat.ones(3, 3, cv.CV_8U);
-                cv.morphologyEx(thresh, thresh, cv.MORPH_CLOSE, kernel);
-                cv.morphologyEx(thresh, thresh, cv.MORPH_OPEN, kernel);
+                cv.morphologyEx(roiThresh, roiThresh, cv.MORPH_CLOSE, kernel);
+                cv.morphologyEx(roiThresh, roiThresh, cv.MORPH_OPEN, kernel);
 
                 contours = new cv.MatVector();
                 hierarchy = new cv.Mat();
-                cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+                cv.findContours(roiThresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
                 let count = 0;
                 for (let i = 0; i < contours.size(); ++i) {
                     let contour = contours.get(i);
                     let area = cv.contourArea(contour);
                     
-                    // OPTIMASI: Membaca partikel kecil mulai dari luas area 50px
                     if (area >= minArea && area <= maxArea) {
-                        count++;
+                        // Saring garis tipis dan panjang (seperti tepi pad, lipatan buku)
+                        if (aspectFilter) {
+                            let boundRect = cv.boundingRect(contour);
+                            let aspect = boundRect.width / boundRect.height;
+                            // Jika objek sangat lonjong/panjang (seperti garis tepi) abaikan
+                            if (aspect > 4.0 || aspect < 0.25) {
+                                continue;
+                            }
+                        }
+
                         let M = cv.moments(contour);
                         if (M.m00 !== 0) {
-                            let cx = M.m10 / M.m00;
-                            let cy = M.m01 / M.m00;
+                            // Petakan kembali koordinat lokal ROI ke koordinat gambar global
+                            let cx = (M.m10 / M.m00) + roiX;
+                            let cy = (M.m01 / M.m00) + roiY;
+                            
+                            // Gambar titik penanda objek yang valid
                             cv.circle(src, new cv.Point(cx, cy), 4, [0, 255, 0, 255], -1); 
                             cv.circle(src, new cv.Point(cx, cy), 6, [0, 0, 0, 255], 2);  
+                            count++;
                         }
                     }
                 }
+
+                // GAMBAR VISUALISASI KOTAK FOKUS (Real Scanner Style)
+                let colorBorder = [59, 130, 246, 255]; // Biru modern
+                let colorCorners = [34, 197, 94, 255]; // Hijau terang
+                
+                // Menggambar garis tepi kotak tipis
+                cv.rectangle(src, new cv.Point(roiX, roiY), new cv.Point(roiX + roiW, roiY + roiH), colorBorder, 1);
+                
+                // Menggambar siku-siku sudut (kamera pemindai profesional)
+                let len = Math.min(roiW, roiH) * 0.08;
+                // Kiri Atas
+                cv.line(src, new cv.Point(roiX, roiY), new cv.Point(roiX + len, roiY), colorCorners, 3);
+                cv.line(src, new cv.Point(roiX, roiY), new cv.Point(roiX, roiY + len), colorCorners, 3);
+                // Kanan Atas
+                cv.line(src, new cv.Point(roiX + roiW, roiY), new cv.Point(roiX + roiW - len, roiY), colorCorners, 3);
+                cv.line(src, new cv.Point(roiX + roiW, roiY), new cv.Point(roiX + roiW, roiY + len), colorCorners, 3);
+                // Kiri Bawah
+                cv.line(src, new cv.Point(roiX, roiY + roiH), new cv.Point(roiX + len, roiY + roiH), colorCorners, 3);
+                cv.line(src, new cv.Point(roiX, roiY + roiH), new cv.Point(roiX, roiY + roiH - len), colorCorners, 3);
+                // Kanan Bawah
+                cv.line(src, new cv.Point(roiX + roiW, roiY + roiH), new cv.Point(roiX + roiW - len, roiY + roiH), colorCorners, 3);
+                cv.line(src, new cv.Point(roiX + roiW, roiY + roiH), new cv.Point(roiX + roiW, roiY + roiH - len), colorCorners, 3);
 
                 cv.imshow(ui.canvas, src);
                 ui.countText.innerText = count;
@@ -427,10 +532,12 @@
             } catch (err) {
                 console.error("OpenCV Error:", err);
             } finally {
+                // Bersihkan memori manual untuk mencegah leak
                 if (src && !src.isDeleted()) src.delete();
                 if (gray && !gray.isDeleted()) gray.delete();
-                if (blurred && !blurred.isDeleted()) blurred.delete();
-                if (thresh && !thresh.isDeleted()) thresh.delete();
+                if (roiGray && !roiGray.isDeleted()) roiGray.delete();
+                if (roiBlurred && !roiBlurred.isDeleted()) roiBlurred.delete();
+                if (roiThresh && !roiThresh.isDeleted()) roiThresh.delete();
                 if (kernel && !kernel.isDeleted()) kernel.delete();
                 if (contours && !contours.isDeleted()) contours.delete();
                 if (hierarchy && !hierarchy.isDeleted()) hierarchy.delete();
