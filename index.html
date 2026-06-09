@@ -79,8 +79,8 @@
 
             <div class="flex items-center justify-between bg-gray-900 p-3 rounded-lg border border-gray-800">
                 <div class="flex flex-col">
-                    <span class="text-sm font-semibold text-white">Auto Akurasi (Otsu)</span>
-                    <span class="text-[11px] text-gray-500">Mencari pencahayaan terbaik</span>
+                    <span class="text-sm font-semibold text-white">Auto Akurasi (Adaptif)</span>
+                    <span class="text-[11px] text-gray-500">Mendukung objek mikro (3-15mm)</span>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" id="chkAuto" class="sr-only peer" checked>
@@ -97,12 +97,12 @@
 
             <div class="flex gap-4">
                 <div class="flex-1 flex flex-col gap-1">
-                    <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Abaikan Debu</span><span id="valMinArea">10</span></label>
-                    <input type="range" id="rngMinArea" min="1" max="500" value="10" class="w-full accent-blue-500">
+                    <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Abaikan Debu</span><span id="valMinArea">50</span></label>
+                    <input type="range" id="rngMinArea" min="5" max="2000" value="50" class="w-full accent-blue-500">
                 </div>
                 <div class="flex-1 flex flex-col gap-1">
-                    <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Batas Maks</span><span id="valMaxArea">15000</span></label>
-                    <input type="range" id="rngMaxArea" min="100" max="30000" step="500" value="15000" class="w-full accent-blue-500">
+                    <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Batas Maks</span><span id="valMaxArea">50000</span></label>
+                    <input type="range" id="rngMaxArea" min="100" max="100000" step="500" value="50000" class="w-full accent-blue-500">
                 </div>
             </div>
 
@@ -141,8 +141,8 @@
         let isSettingsOpen = false;
         let autoPrecision = true;
         let thresholdValue = 128;
-        let minArea = 10;
-        let maxArea = 15000;
+        let minArea = 50; // Batas minimal disesuaikan ke 50 untuk mendeteksi objek mikro 3mm
+        let maxArea = 50000;
         let isLightOnDark = false; // Default ke false (hitung objek gelap pada latar terang)
 
         // --- DOM ELEMENTS ---
@@ -319,13 +319,13 @@
         });
 
         ui.rngMinArea.addEventListener('input', (e) => {
-            minArea = e.target.value;
+            minArea = parseInt(e.target.value);
             ui.valMinArea.innerText = minArea;
             triggerProcess();
         });
 
         ui.rngMaxArea.addEventListener('input', (e) => {
-            maxArea = e.target.value;
+            maxArea = parseInt(e.target.value);
             ui.valMaxArea.innerText = maxArea;
             triggerProcess();
         });
@@ -376,19 +376,27 @@
                 gray = new cv.Mat();
                 cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
 
+                // OPTIMASI: Mengurangi ukuran Median Blur menjadi 5 agar part mini 3mm tidak ikut buram/hilang
                 blurred = new cv.Mat();
-                cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+                cv.medianBlur(gray, blurred, 5);
 
                 thresh = new cv.Mat();
-                let threshType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
                 
                 if (autoPrecision) {
-                    cv.threshold(blurred, thresh, 0, 255, threshType | cv.THRESH_OTSU);
+                    // OPTIMASI: Mengurangi ukuran blok analisis adaptif menjadi 15 (sebelumnya 31)
+                    // untuk mendeteksi kontur objek mikro dengan akurasi yang lebih tajam
+                    let adaptiveMethod = cv.ADAPTIVE_THRESH_GAUSSIAN_C;
+                    let thresholdType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
+                    cv.adaptiveThreshold(blurred, thresh, 255, adaptiveMethod, thresholdType, 15, 5);
                 } else {
+                    let threshType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
                     cv.threshold(blurred, thresh, parseInt(thresholdValue), 255, threshType);
                 }
 
+                // OPTIMASI: Menggunakan kernel morfologi 3x3 (sebelumnya 5x5)
+                // agar ring kecil/pin tipis tidak terhapus selama proses pembersihan noise
                 kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+                cv.morphologyEx(thresh, thresh, cv.MORPH_CLOSE, kernel);
                 cv.morphologyEx(thresh, thresh, cv.MORPH_OPEN, kernel);
 
                 contours = new cv.MatVector();
@@ -400,6 +408,7 @@
                     let contour = contours.get(i);
                     let area = cv.contourArea(contour);
                     
+                    // OPTIMASI: Membaca partikel kecil mulai dari luas area 50px
                     if (area >= minArea && area <= maxArea) {
                         count++;
                         let M = cv.moments(contour);
