@@ -3,49 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ProScanner - Penghitung Objek</title>
-    <!-- Memuat Tailwind CSS untuk tampilan -->
+    <title>ProScanner - Penghitung Otomatis</title>
+    <!-- Memuat Tailwind CSS untuk tampilan premium -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Memuat OpenCV.js -->
+    <!-- Memuat OpenCV.js secara asinkron -->
     <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()"></script>
 </head>
-<body class="flex flex-col h-[100dvh] bg-gray-950 text-gray-100 font-sans overflow-hidden">
+<body class="flex flex-col h-[100dvh] bg-gray-950 text-gray-100 font-sans overflow-hidden select-none">
 
     <!-- HEADER -->
-    <div class="bg-gray-900 text-white p-3 flex justify-between items-center z-10 border-b border-gray-800">
+    <div class="bg-gray-900 text-white p-4 flex justify-between items-center z-10 border-b border-gray-800 shadow-md">
         <div class="flex items-center gap-3">
-            <div class="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
+            <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md">
                 <!-- Ikon Video -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
             </div>
-            <h1 class="text-xl font-bold tracking-wide">ProScanner</h1>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide leading-none">ProScanner</h1>
+                <span class="text-[10px] text-blue-400 font-semibold uppercase tracking-wider">AI Auto-Calibration Engine</span>
+            </div>
         </div>
-        <button id="btnToggleSettings" class="p-2 bg-gray-800 text-gray-300 hover:bg-gray-700 rounded-full transition-colors">
-            <!-- Ikon Settings -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+        <!-- Indikator Status Otomatis -->
+        <div class="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span class="text-xs font-bold text-blue-400">AUTO</span>
+        </div>
     </div>
 
     <!-- AREA UTAMA -->
     <div class="flex-1 relative overflow-hidden flex justify-center items-center bg-black">
         
         <!-- Banner Notifikasi Kustom -->
-        <div id="toastNotification" class="hidden absolute top-4 left-4 right-4 bg-red-600 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 z-30 animate-bounce text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12 y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        <div id="toastNotification" class="hidden absolute top-4 left-4 right-4 bg-blue-600 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 z-30 text-sm border border-blue-400/30">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
             <span id="toastText">Notifikasi</span>
         </div>
 
         <!-- Loading Screen -->
         <div id="loadingScreen" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 z-20">
             <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mb-4"></div>
-            <p class="font-medium text-gray-300">Menyiapkan Engine AI...</p>
+            <p class="font-medium text-gray-300">Menyiapkan Engine Visi AI...</p>
         </div>
 
         <!-- Layar Kosong Awal -->
         <div id="emptyScreen" class="hidden text-gray-400 flex flex-col items-center px-8 text-center max-w-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-700 mb-6"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-            <h2 class="text-white text-xl font-bold mb-2">Siap Menghitung</h2>
-            <p class="text-sm">Buka kamera untuk menghitung langsung, atau pilih gambar dari galeri Anda.</p>
+            <div class="bg-gray-900 p-5 rounded-full mb-6 border border-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+            </div>
+            <h2 class="text-white text-xl font-bold mb-2">Siap Menghitung Otomatis</h2>
+            <p class="text-sm text-gray-500 leading-relaxed">Letakkan part di dalam kotak fokus. AI otomatis mendeteksi ukuran, bahan, dan jumlah part secara instan.</p>
         </div>
 
         <!-- Live Video Area -->
@@ -53,18 +59,18 @@
             <video id="videoElement" autoplay playsinline muted class="w-full h-full object-cover"></video>
             
             <div class="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-                <select id="cameraSelect" class="bg-black/60 text-white px-4 py-2 rounded-full text-sm backdrop-blur-md border border-gray-600 outline-none max-w-[150px] truncate"></select>
+                <select id="cameraSelect" class="bg-black/70 text-white px-4 py-2 rounded-full text-xs font-semibold backdrop-blur-md border border-gray-700 outline-none max-w-[150px] truncate"></select>
                 
                 <!-- Tombol Senter HP (Torch) -->
-                <button id="btnTorch" class="hidden bg-black/60 text-white p-2.5 rounded-full border border-gray-600 backdrop-blur-md active:scale-95 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17a3 3 0 1 1-6 0c0-2.2 2.2-4 3-6 .8 2 3 3.8 3 6Z"/><path d="M18 6h-2V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Z"/></svg>
+                <button id="btnTorch" class="hidden bg-black/70 text-white p-2.5 rounded-full border border-gray-700 backdrop-blur-md active:scale-95 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17a3 3 0 1 1-6 0c0-2.2 2.2-4 3-6 .8 2 3 3.8 3 6Z"/><path d="M18 6h-2V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Z"/></svg>
                 </button>
             </div>
             
             <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 w-full flex justify-center px-4">
-                <button id="btnCapture" class="bg-white text-blue-600 font-bold px-6 py-3 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.4)] active:scale-90 transition-transform border-4 border-gray-300 flex items-center gap-2 text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                    Hitung Objek
+                <button id="btnCapture" class="bg-white text-gray-900 font-extrabold px-8 py-3.5 rounded-full shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-90 transition-transform border-4 border-gray-300 flex items-center gap-2.5 text-sm uppercase tracking-wider">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    Pindai Sekarang
                 </button>
             </div>
         </div>
@@ -73,184 +79,27 @@
         <img id="sourceImage" class="hidden" alt="Source" />
         <canvas id="resultCanvas" class="hidden max-w-full max-h-full object-contain"></canvas>
         
-        <div id="resultBadge" class="hidden absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-full shadow-2xl font-black text-2xl flex items-center gap-3 border-[3px] border-blue-400 z-10">
+        <!-- Badge Jumlah Akhir -->
+        <div id="resultBadge" class="hidden absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-8 py-2.5 rounded-full shadow-[0_10px_25px_-5px_rgba(59,130,246,0.5)] font-black text-3xl flex items-center gap-3 border-[3px] border-blue-400 z-10">
             <span id="objCountText">0</span>
-            <span class="text-xs font-semibold text-blue-100 uppercase tracking-widest mt-1">Objek</span>
+            <span class="text-xs font-bold text-blue-100 uppercase tracking-widest mt-1">Objek</span>
         </div>
     </div>
 
-    <!-- PANEL KONTROL BAWAH -->
-    <div class="relative bg-gray-900 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.5)] p-3 flex flex-col gap-3 z-10">
+    <!-- PANEL KONTROL BAWAH (MINIMALIS TANPA SETTING) -->
+    <div class="bg-gray-900 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.5)] p-4 flex flex-col gap-3 z-10 border-t border-gray-800">
         
-        <!-- PENGATURAN MELAYANG (FLOATING) -->
-        <div id="settingsPanel" class="hidden absolute bottom-full left-3 right-3 mb-3 bg-gray-950/95 backdrop-blur-md p-4 rounded-2xl border border-gray-800 flex flex-col gap-3 shadow-2xl z-20 max-h-[70vh] overflow-y-auto">
-            <div class="flex justify-between items-center pb-2 border-b border-gray-800">
-                <h3 class="font-semibold text-gray-200 flex items-center gap-2">Pengaturan & Kalibrasi AI</h3>
-            </div>
-
-            <!-- DATABASE & KALIBRASI PART (MATERIAL & DIMENSI) -->
-            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-3">
-                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Database & Kalibrasi Part</span>
-                
-                <!-- Pilihan Material -->
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-medium text-gray-400">Jenis Material Part</label>
-                    <select id="selMaterial" class="bg-gray-950 text-white text-sm rounded-lg block w-full p-2 border border-gray-700 outline-none">
-                        <option value="metal_shiny">Logam Silver (Mengkilap/Chrome)</option>
-                        <option value="metal_dark">Logam Gelap (Hitam/Dof/Oksida)</option>
-                        <option value="plastic_light">Plastik Solid Terang (Putih/Kuning/Merah)</option>
-                        <option value="plastic_dark" selected>Plastik Solid Gelap (Hitam/Abu/Biru Tua)</option>
-                    </select>
-                </div>
-
-                <!-- Slider Dimensi Panjang Benda (3mm - 15mm) -->
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-medium text-gray-400 flex justify-between">
-                        <span>Dimensi Panjang Part</span>
-                        <span id="valPartDim" class="text-blue-400 font-bold">5 mm</span>
-                    </label>
-                    <input type="range" id="rngPartDim" min="3" max="15" value="5" class="w-full accent-blue-500">
-                    <span class="text-[10px] text-gray-500">Menghitung rasio piksel ke milimeter berdasarkan jarak kamera Anda secara cerdas.</span>
-                </div>
-            </div>
-
-            <!-- PRESET JARAK KAMERA -->
-            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-2">
-                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Konfigurasi Jarak & Fokus</span>
-                <div class="flex gap-2">
-                    <button id="btnDistNear" class="flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-400">Dekat (&lt; 15cm)</button>
-                    <button id="btnDistFar" class="flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400">Jauh (15 - 30cm)</button>
-                </div>
-            </div>
-
-            <!-- FITUR: PISAH OBJEK MENEMPEL (CLUMP SPLITTING) -->
-            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-semibold text-white">Pisah Objek Menempel</span>
-                        <span class="text-[11px] text-gray-500">Mendeteksi multi-part yang menumpuk/menempel</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="chkSplitTouch" class="sr-only peer" checked>
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-                
-                <div id="splitControlsContainer" class="flex flex-col gap-2 pt-1 border-t border-gray-800/50">
-                    <div class="flex gap-4">
-                        <div class="flex-1 flex flex-col gap-1">
-                            <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Ukuran 1 Part (Auto)</span><span id="valPartSize">80 px</span></label>
-                            <input type="range" id="rngPartSize" min="10" max="5000" step="10" value="80" class="w-full accent-blue-500" disabled>
-                        </div>
-                        <div class="flex-1 flex flex-col gap-1">
-                            <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Sensitivitas Pisah</span><span id="valSplitSens">40%</span></label>
-                            <input type="range" id="rngSplitSens" min="10" max="90" value="40" class="w-full accent-blue-500">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- FITUR: SARING BAYANGAN FLASHLIGHT/SENTER -->
-            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-semibold text-white">Saring Bayangan Senter</span>
-                        <span class="text-[11px] text-gray-500">Abaikan bayangan halus di samping benda</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="chkShadow" class="sr-only peer" checked>
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-                
-                <div id="shadowControlsContainer" class="flex flex-col gap-1 pt-1 border-t border-gray-800/50">
-                    <label class="text-xs font-medium text-gray-400 flex justify-between">
-                        <span>Ambang Batas Saring</span><span id="valShadowThresh">12 StdDev</span>
-                    </label>
-                    <input type="range" id="rngShadowThresh" min="1" max="80" value="12" class="w-full accent-blue-500">
-                </div>
-            </div>
-
-            <!-- Auto Akurasi Switch -->
-            <div class="flex items-center justify-between bg-gray-900 p-3 rounded-lg border border-gray-800">
-                <div class="flex flex-col">
-                    <span class="text-sm font-semibold text-white">Auto Akurasi (Adaptif)</span>
-                    <span class="text-[11px] text-gray-500">Menghilangkan kilau & bayangan</span>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="chkAuto" class="sr-only peer" checked>
-                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-            </div>
-
-            <!-- Filter Garis Tipis (Aspect Ratio Filter) -->
-            <div class="flex items-center justify-between bg-gray-900 p-3 rounded-lg border border-gray-800">
-                <div class="flex flex-col">
-                    <span class="text-sm font-semibold text-white">Saring Garis Tipis & Panjang</span>
-                    <span class="text-[11px] text-gray-500">Abaikan tepi meja / sisi luar pad</span>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="chkAspect" class="sr-only peer" checked>
-                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-            </div>
-
-            <!-- Filter Anti-Double-Count (Jarak Penggabungan Titik) -->
-            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-1">
-                <label class="text-xs font-semibold text-white flex justify-between">
-                    <span>Gabung Titik Dekat (Saring Dobel)</span>
-                    <span id="valMergeDist" class="text-blue-400 font-bold">10 px</span>
-                </label>
-                <input type="range" id="rngMergeDist" min="0" max="100" value="10" class="w-full accent-blue-500">
-            </div>
-
-            <!-- Pengaturan Area Fokus (ROI) -->
-            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex flex-col gap-2">
-                <span class="text-sm font-semibold text-white">Dimensi Kotak Fokus Pemindai</span>
-                <div class="flex gap-4">
-                    <div class="flex-1 flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Lebar Fokus</span><span id="valRoiW">70%</span></label>
-                        <input type="range" id="rngRoiW" min="20" max="100" value="70" class="w-full accent-blue-500">
-                    </div>
-                    <div class="flex-1 flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Tinggi Fokus</span><span id="valRoiH">70%</span></label>
-                        <input type="range" id="rngRoiH" min="20" max="100" value="70" class="w-full accent-blue-500">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Manual Threshold Slider -->
-            <div id="manualThreshContainer" class="hidden flex flex-col gap-1 bg-gray-900 p-3 rounded-lg border border-gray-800">
-                <label class="text-xs font-medium text-gray-400 flex justify-between">
-                    <span>Sensitivitas Manual</span><span id="valThresh">128</span>
-                </label>
-                <input type="range" id="rngThresh" min="0" max="255" value="128" class="w-full accent-blue-500">
-            </div>
-
-            <!-- Ukuran Objek Slider -->
-            <div class="flex gap-4 bg-gray-900 p-3 rounded-lg border border-gray-800">
-                <div class="flex-1 flex flex-col gap-1">
-                    <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Abaikan Debu</span><span id="valMinArea">10</span></label>
-                    <input type="range" id="rngMinArea" min="5" max="2000" value="10" class="w-full accent-blue-500" disabled>
-                </div>
-                <div class="flex-1 flex flex-col gap-1">
-                    <label class="text-xs font-medium text-gray-400 flex justify-between"><span>Batas Maks</span><span id="valMaxArea">50000</span></label>
-                    <input type="range" id="rngMaxArea" min="100" max="100000" step="500" value="50000" class="w-full accent-blue-500" disabled>
-                </div>
-            </div>
-        </div>
-
-        <!-- TOMBOL AKSI -->
-        <div class="flex gap-2">
-            <label class="flex-1 bg-gray-800 text-gray-300 py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:bg-gray-700 transition-colors active:scale-95 border border-gray-700">
+        <!-- TOMBOL AKSI UTAMA -->
+        <div class="flex gap-3">
+            <label class="flex-1 bg-gray-800 text-gray-300 py-3.5 rounded-2xl flex items-center justify-center gap-2 cursor-pointer hover:bg-gray-700 transition-colors active:scale-95 border border-gray-700">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                <span class="font-semibold text-sm">Galeri</span>
+                <span class="font-bold text-sm">Ambil Galeri</span>
                 <input type="file" id="fileInput" accept="image/*" class="hidden" />
             </label>
 
-            <button id="btnStartCamera" class="flex-[2] bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-500 transition-colors shadow-lg active:scale-95 border border-blue-500 font-bold">
+            <button id="btnStartCamera" class="flex-[2] bg-blue-600 text-white py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-blue-500 transition-colors shadow-lg active:scale-95 border border-blue-500 font-extrabold">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-                <span class="text-sm">Kamera Langsung</span>
+                <span class="text-sm">Buka Kamera</span>
             </button>
         </div>
     </div>
@@ -265,34 +114,6 @@
         let objectCount = 0;
         let currentFacingMode = 'environment'; // Default ke kamera belakang
         let isTorchOn = false; // Status senter HP
-        
-        // Settings Variables
-        let isSettingsOpen = false;
-        let cameraDistanceMode = 'far'; // Default ke mode Jauh untuk mendukung pengujian 30cm
-        let autoPrecision = true;
-        let aspectFilter = true; // Saring kontur garis panjang/tipis secara default
-        let roiWidthPercent = 70; // Default lebar kotak fokus 70%
-        let roiHeightPercent = 70; // Default tinggi kotak fokus 70%
-        let thresholdValue = 128;
-        
-        // Dynamic Parameters calculated by Calibration Database
-        let minArea = 10;
-        let maxArea = 50000;
-        let isLightOnDark = false; 
-        let mergeDist = 10; 
-        
-        // Clump Splitting Variables (Fitur Pemisah Objek Menempel)
-        let splitTouchEnabled = true;
-        let partSize = 80; // Ukuran estimasi satu partikel tunggal dalam piksel (skala 30cm)
-        let splitSensitivity = 40; // Sensitivitas ambang batas pemisahan (10% - 90%)
-
-        // Shadow Filter Variables
-        let shadowFilterEnabled = true;
-        let shadowThreshold = 12; // Ambang batas standard deviasi untuk menyaring bayangan
-
-        // Calibration Database Variables
-        let selectedMaterial = "plastic_dark"; // Default: Plastik Solid Gelap
-        let partDimensionMm = 5; // Default: 5 mm
 
         // --- DOM ELEMENTS (Lazy Getters untuk menghindari Race Condition) ---
         const ui = {
@@ -309,47 +130,8 @@
             get countText() { return document.getElementById('objCountText'); },
             get fileInput() { return document.getElementById('fileInput'); },
             get btnStartCam() { return document.getElementById('btnStartCamera'); },
-            get btnSettings() { return document.getElementById('btnToggleSettings'); },
-            get panelSettings() { return document.getElementById('settingsPanel'); },
-            // Preset Jarak
-            get btnNear() { return document.getElementById('btnDistNear'); },
-            get btnFar() { return document.getElementById('btnDistFar'); },
-            // Clump Splitting Elements
-            get chkSplitTouch() { return document.getElementById('chkSplitTouch'); },
-            get rngPartSize() { return document.getElementById('rngPartSize'); },
-            get valPartSize() { return document.getElementById('valPartSize'); },
-            get rngSplitSens() { return document.getElementById('rngSplitSens'); },
-            get valSplitSens() { return document.getElementById('valSplitSens'); },
-            // Shadow Filter Elements
-            get chkShadow() { return document.getElementById('chkShadow'); },
-            get shadowControls() { return document.getElementById('shadowControlsContainer'); },
-            get rngShadowThresh() { return document.getElementById('rngShadowThresh'); },
-            get valShadowThresh() { return document.getElementById('valShadowThresh'); },
-            // Calibration Database Elements
-            get selMaterial() { return document.getElementById('selMaterial'); },
-            get rngPartDim() { return document.getElementById('rngPartDim'); },
-            get valPartDim() { return document.getElementById('valPartDim'); },
-            // Toast Notification Banner
             get toast() { return document.getElementById('toastNotification'); },
-            get toastText() { return document.getElementById('toastText'); },
-            // Inputs
-            get chkAuto() { return document.getElementById('chkAuto'); },
-            get chkAspect() { return document.getElementById('chkAspect'); },
-            get rngMergeDist() { return document.getElementById('rngMergeDist'); },
-            get valMergeDist() { return document.getElementById('valMergeDist'); },
-            get rngRoiW() { return document.getElementById('rngRoiW'); },
-            get valRoiW() { return document.getElementById('valRoiW'); },
-            get rngRoiH() { return document.getElementById('rngRoiH'); },
-            get valRoiH() { return document.getElementById('valRoiH'); },
-            get manualThreshCont() { return document.getElementById('manualThreshContainer'); },
-            get rngThresh() { return document.getElementById('rngThresh'); },
-            get valThresh() { return document.getElementById('valThresh'); },
-            get rngMinArea() { return document.getElementById('rngMinArea'); },
-            get valMinArea() { return document.getElementById('valMinArea'); },
-            get rngMaxArea() { return document.getElementById('rngMaxArea'); },
-            get valMaxArea() { return document.getElementById('valMaxArea'); },
-            get btnLight() { return document.getElementById('btnLightObj'); },
-            get getBtnDark() { return document.getElementById('btnDarkObj'); },
+            get toastText() { return document.getElementById('toastText'); }
         };
 
         // --- CUSTOM TOAST NOTIFICATION ---
@@ -362,14 +144,12 @@
             }, 5000);
         }
 
-        // --- INIT OPENCV (Menggunakan penangguhan aman jika DOM belum siap) ---
+        // --- INIT OPENCV ---
         window.onOpenCvReady = function() {
             cvReady = true;
-            
             const runOnLoad = () => {
                 if (ui.loading) ui.loading.classList.add('hidden');
                 if (ui.empty) ui.empty.classList.remove('hidden');
-                updateCalibration();
             };
 
             if (document.readyState === 'loading') {
@@ -379,7 +159,7 @@
             }
         };
 
-        // --- UI UPDATES ---
+        // --- STREAMLINED UI STATES ---
         function updateScreenState() {
             if (!ui.empty) return;
             ui.empty.classList.add('hidden');
@@ -397,83 +177,8 @@
             }
 
             if (ui.btnStartCam) {
-                ui.btnStartCam.querySelector('span').innerText = isLiveMode ? "Tutup Kamera" : "Kamera Langsung";
+                ui.btnStartCam.querySelector('span').innerText = isLiveMode ? "Tutup Kamera" : "Buka Kamera";
             }
-        }
-
-        // --- ALGORITMA DATABASE KALIBRASI PINTAR ---
-        function updateCalibration() {
-            if (!ui.selMaterial || !ui.rngPartDim) return; // Mencegah crash jika DOM belum siap
-            
-            selectedMaterial = ui.selMaterial.value;
-            partDimensionMm = parseInt(ui.rngPartDim.value);
-            
-            // 1. Hitung skala piksel per milimeter (pxPerMm) secara dinamis berdasarkan Jarak Kamera
-            let pxPerMm = (cameraDistanceMode === 'far') ? 4.5 : 12.0;
-            
-            // 2. Hitung Ukuran Teoritis 1 Part (Luas Area dalam piksel)
-            let partRadiusPx = (partDimensionMm / 2) * pxPerMm;
-            let calculatedArea = Math.round(Math.PI * Math.pow(partRadiusPx, 2));
-            
-            // Simpan estimasi ukuran 1 part untuk clump splitting
-            partSize = calculatedArea;
-            if (ui.rngPartSize) ui.rngPartSize.value = partSize;
-            if (ui.valPartSize) ui.valPartSize.innerText = partSize + " px";
-
-            // 3. Set batas dinamis (Min/Max Area) berdasarkan deviasi ukuran part (+- 40%)
-            minArea = Math.round(calculatedArea * 0.4);
-            if (minArea < 5) minArea = 5; 
-            
-            maxArea = Math.round(calculatedArea * 3.5); 
-
-            // Perbarui slider parameter manual
-            if (ui.rngMinArea) ui.rngMinArea.value = minArea;
-            if (ui.valMinArea) ui.valMinArea.innerText = minArea;
-            if (ui.rngMaxArea) ui.rngMaxArea.value = maxArea;
-            if (ui.valMaxArea) ui.valMaxArea.innerText = maxArea;
-
-            // 4. Set parameter khusus berdasarkan tipe MATERIAL benda
-            switch(selectedMaterial) {
-                case 'metal_shiny': // Logam Silver Mengkilap
-                    isLightOnDark = false; 
-                    mergeDist = (cameraDistanceMode === 'far') ? 14 : 28; 
-                    shadowFilterEnabled = true;
-                    shadowThreshold = 14; 
-                    break;
-                    
-                case 'metal_dark': // Logam Gelap (Hitam)
-                    isLightOnDark = true; 
-                    mergeDist = (cameraDistanceMode === 'far') ? 8 : 16; 
-                    shadowFilterEnabled = true;
-                    shadowThreshold = 10;
-                    break;
-                    
-                case 'plastic_light': // Plastik Terang
-                    isLightOnDark = false; 
-                    mergeDist = (cameraDistanceMode === 'far') ? 6 : 12; 
-                    shadowFilterEnabled = false; 
-                    shadowThreshold = 8;
-                    break;
-                    
-                case 'plastic_dark': // Plastik Gelap
-                default:
-                    isLightOnDark = true; 
-                    mergeDist = (cameraDistanceMode === 'far') ? 6 : 12;
-                    shadowFilterEnabled = false;
-                    shadowThreshold = 8;
-                    break;
-            }
-
-            // Sync parameter ke elemen input kontrol manual
-            if (ui.rngMergeDist) ui.rngMergeDist.value = mergeDist;
-            if (ui.valMergeDist) ui.valMergeDist.innerText = mergeDist + " px";
-            if (ui.chkShadow) ui.chkShadow.checked = shadowFilterEnabled;
-            if (ui.shadowControls) ui.shadowControls.classList.toggle('hidden', !shadowFilterEnabled);
-            if (ui.rngShadowThresh) ui.rngShadowThresh.value = shadowThreshold;
-            if (ui.valShadowThresh) ui.valShadowThresh.innerText = shadowThreshold + " StdDev";
-            
-            updateColorMode(isLightOnDark);
-            triggerProcess();
         }
 
         // --- CAMERA LOGIC ---
@@ -529,8 +234,7 @@
 
             } catch (err) {
                 console.error("Error start kamera", err);
-                // MENGGANTI ALERT LAMA: Sekarang memicu toast notifikasi yang informatif dan ramah pengguna
-                showNotification("Gagal mengakses kamera. Kemungkinan besar Anda membuka link ini dari dalam obrolan chat (seperti WhatsApp/Telegram).\n\nSilakan SALIN (copy) link di atas, lalu TEMPELKAN (paste) dan jalankan pada browser GOOGLE CHROME atau SAFARI di HP Anda agar kamera berfungsi.");
+                showNotification("Gagal membuka kamera. Harap salin link di atas lalu tempelkan (paste) langsung ke browser utama HP (Chrome/Safari) agar mendapatkan izin kamera.");
             }
         }
 
@@ -539,7 +243,6 @@
                 stream.getTracks().forEach(t => t.stop());
                 stream = null;
             }
-            // Reset Senter status
             isTorchOn = false;
             if (ui.btnTorch) {
                 ui.btnTorch.classList.add('hidden');
@@ -548,33 +251,18 @@
             }
         }
 
-        function updateColorMode(isLight) {
-            isLightOnDark = isLight;
-            if (isLight) {
-                if (ui.btnLight) ui.btnLight.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400";
-                if (ui.getBtnDark) ui.getBtnDark.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-500";
-            } else {
-                if (ui.getBtnDark) ui.getBtnDark.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-blue-600/20 border-blue-500 text-blue-400";
-                if (ui.btnLight) ui.btnLight.className = "flex-1 py-2 rounded-lg text-xs font-bold border bg-gray-900 border-gray-700 text-gray-500";
-            }
-            triggerProcess();
-        }
-
-        function triggerProcess() {
-            if (currentImageLoaded && !isLiveMode) processImage();
-        }
-
-        // --- CORE AI PROCESSING (Computer Vision) ---
+        // --- STREAMLINED CORE COMPUTER VISION AUTOMATION ---
         function processImage() {
             if (!cvReady || !currentImageLoaded || !ui.imgSrc || !ui.canvas) return;
             
-            let img, src, gray, blurred, thresh, kernel, contours, hierarchy;
+            let img, src, gray, blurred, tempThresh, kernel, contours, hierarchy;
             let roiGray, roiBlurred, roiThresh;
             
             try {
                 img = cv.imread(ui.imgSrc);
                 src = new cv.Mat();
                 
+                // Prapemrosesan: Normalisasi Ukuran Gambar
                 let maxSize = 1000;
                 if (img.cols > maxSize || img.rows > maxSize) {
                     let scale = Math.min(maxSize / img.cols, maxSize / img.rows);
@@ -585,105 +273,108 @@
                 }
                 img.delete();
 
-                // Hitung Dimensi Kotak Fokus (ROI)
+                // 1. KOTAK FOKUS OTOMATIS (Region of Interest / ROI)
+                // Dikunci secara optimal pada 75% layar agar frame pindaian sangat pas & ringkas
+                let roiWidthPercent = 75;
+                let roiHeightPercent = 75;
                 let roiW = Math.round(src.cols * (roiWidthPercent / 100));
                 let roiH = Math.round(src.rows * (roiHeightPercent / 100));
                 let roiX = Math.round((src.cols - roiW) / 2);
                 let roiY = Math.round((src.rows - roiH) / 2);
-
-                if (roiX < 0) roiX = 0;
-                if (roiY < 0) roiY = 0;
-                if (roiX + roiW > src.cols) roiW = src.cols - roiX;
-                if (roiY + roiH > src.rows) roiH = src.rows - roiY;
 
                 let rectRoi = new cv.Rect(roiX, roiY, roiW, roiH);
 
                 gray = new cv.Mat();
                 cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
 
+                // Isolasi area kerja di dalam kotak saja
                 roiGray = gray.roi(rectRoi);
 
+                // Reduksi bintik-bintik debu ringan menggunakan Median Blur halus
                 roiBlurred = new cv.Mat();
-                roiThresh = new cv.Mat();
+                cv.medianBlur(roiGray, roiBlurred, 5);
+
+                // 2. DETEKSI WARNA LATAR OTOMATIS (Auto-Background Calibration)
+                // Mengambil sampel kecerahan di area sudut latar untuk menentukan tipe thresholding
+                let backgroundMean = 0;
+                let sampleSize = Math.min(10, roiGray.cols, roiGray.rows);
+                let sampleSum = 0;
+                let sampleCount = 0;
+                for (let r = 0; r < sampleSize; r++) {
+                    for (let c = 0; c < sampleSize; c++) {
+                        sampleSum += roiGray.ucharAt(r, c);
+                        sampleCount++;
+                    }
+                }
+                backgroundMean = sampleSum / sampleCount;
                 
-                let morphSize = 3;
-                let adaptiveBlockSize = 15;
+                // Jika warna rata-rata < 127 (latar gelap/pad hitam), target objek adalah terang (Light On Dark)
+                // Jika sebaliknya (kertas HVS putih), target objek adalah gelap (Dark On Light)
+                let isLightOnDark = (backgroundMean < 127);
+                let threshType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
 
-                if (cameraDistanceMode === 'far') {
-                    cv.medianBlur(roiGray, roiBlurred, 3);
-                    adaptiveBlockSize = 11;
-                    morphSize = 2; 
-                } else {
-                    cv.medianBlur(roiGray, roiBlurred, 5);
-                    adaptiveBlockSize = 15;
-                    morphSize = 3;
-                }
+                // 3. ADAPTIVE BINARIZATION
+                roiThresh = new cv.Mat();
+                cv.adaptiveThreshold(roiBlurred, roiThresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, threshType, 15, 5);
 
-                if (autoPrecision) {
-                    let adaptiveMethod = cv.ADAPTIVE_THRESH_GAUSSIAN_C;
-                    let thresholdType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
-                    cv.adaptiveThreshold(roiBlurred, roiThresh, 255, adaptiveMethod, thresholdType, adaptiveBlockSize, 5);
-                } else {
-                    let threshType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
-                    cv.threshold(roiBlurred, roiThresh, parseInt(thresholdValue), 255, threshType);
-                }
-
-                // Morfologi Closing & Opening
-                kernel = cv.Mat.ones(morphSize, morphSize, cv.CV_8U);
-                cv.morphologyEx(roiThresh, roiThresh, cv.MORPH_CLOSE, kernel);
-                cv.morphologyEx(roiThresh, roiThresh, cv.MORPH_OPEN, kernel);
+                // 4. PRE-CALIBRATION CONTOUR ANALYSIS
+                // Menemukan bentuk-bentuk awal untuk menganalisis dimensi target baut/part secara cerdas
+                tempThresh = roiThresh.clone();
+                kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+                cv.morphologyEx(tempThresh, tempThresh, cv.MORPH_OPEN, kernel);
 
                 contours = new cv.MatVector();
                 hierarchy = new cv.Mat();
-                cv.findContours(roiThresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+                cv.findContours(tempThresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
+                let candidateAreas = [];
+                for (let i = 0; i < contours.size(); i++) {
+                    let area = cv.contourArea(contours.get(i));
+                    // Mengabaikan noise sangat kecil (<20px) dan area background raksasa (>20% total layar)
+                    if (area > 20 && area < (roiW * roiH * 0.2)) {
+                        candidateAreas.push(area);
+                    }
+                }
+
+                // 5. KALIBRATOR DIMENSI MATEMATIS (Auto-Scaling)
+                // Mencari nilai Median Area sebagai representasi ukuran valid satu buah part
+                let medianArea = 150; // Fallback jika tidak terdeteksi
+                if (candidateAreas.length > 0) {
+                    candidateAreas.sort((a, b) => a - b);
+                    let mid = Math.floor(candidateAreas.length / 2);
+                    medianArea = (candidateAreas.length % 2 !== 0) ? candidateAreas[mid] : (candidateAreas[mid - 1] + candidateAreas[mid]) / 2;
+                }
+
+                // Mengunci rentang minimal dan maksimal secara dinamis berbasis deviasi part
+                let minArea = Math.max(15, Math.round(medianArea * 0.35));
+                let maxArea = Math.round(medianArea * 3.5);
+                let partSize = medianArea;
+
+                // Menentukan jarak anti-double-counting (mergeDist) secara adaptif dari diameter part
+                let medianDiameter = 2 * Math.sqrt(medianArea / Math.PI);
+                let mergeDist = Math.max(8, Math.round(medianDiameter * 0.4));
+
+                // 6. PIPELINE UTAMA: FILTERING & CLUMP SPLITTING
                 let rawCenters = [];
                 for (let i = 0; i < contours.size(); ++i) {
                     let contour = contours.get(i);
                     let area = cv.contourArea(contour);
                     
                     if (area >= minArea && area <= maxArea) {
-                        // Saring garis tipis dan panjang
-                        if (aspectFilter) {
-                            let boundRect = cv.boundingRect(contour);
-                            let aspect = boundRect.width / boundRect.height;
-                            if (aspect > 4.0 || aspect < 0.25) {
-                                continue;
-                            }
+                        // Saring kontur garis tipis atau panjang (bukan part padat bulat)
+                        let boundRect = cv.boundingRect(contour);
+                        let aspect = boundRect.width / boundRect.height;
+                        if (aspect > 4.0 || aspect < 0.25) {
+                            continue;
                         }
 
-                        // Evaluasi tingkat variasi kontras di dalam kontur untuk menyaring bayangan senter
-                        if (shadowFilterEnabled) {
-                            let mask = cv.Mat.zeros(roiThresh.rows, roiThresh.cols, cv.CV_8U);
-                            let tempContours = new cv.MatVector();
-                            tempContours.push_back(contour);
-                            cv.drawContours(mask, tempContours, 0, new cv.Scalar(255), -1);
-
-                            let mean = new cv.Mat();
-                            let stddev = new cv.Mat();
-                            cv.meanStdDev(roiGray, mean, stddev, mask);
-
-                            let valStdDev = stddev.doubleAt(0, 0);
-
-                            mean.delete();
-                            stddev.delete();
-                            mask.delete();
-                            tempContours.delete();
-
-                            // Jika Standar Deviasi rendah, berarti area tersebut homogen / bayangan pudar
-                            if (valStdDev < shadowThreshold) {
-                                continue; 
-                            }
-                        }
-
-                        // Pemisahan Objek Menumpuk/Menempel
-                        if (splitTouchEnabled && area >= (partSize * 1.3)) {
+                        // DETEKSI OTOMATIS PART MENEMPEL (Local Peaks Distance Transform)
+                        if (area >= (partSize * 1.35)) {
                             let rect = cv.boundingRect(contour);
-                            
                             let mask = cv.Mat.zeros(roiThresh.rows, roiThresh.cols, cv.CV_8U);
-                            let tempContours = new cv.MatVector();
-                            tempContours.push_back(contour);
-                            cv.drawContours(mask, tempContours, 0, new cv.Scalar(255), -1);
+                            let tempConts = new cv.MatVector();
+                            tempConts.push_back(contour);
+                            cv.drawContours(mask, tempConts, 0, new cv.Scalar(255), -1);
                             
                             let contourRoi = roiThresh.roi(rect);
                             let maskRoi = mask.roi(rect);
@@ -698,8 +389,7 @@
                             let maxVal = minMax.maxVal;
                             
                             let distThresh = new cv.Mat();
-                            let threshLevel = maxVal * (splitSensitivity / 100);
-                            cv.threshold(dist, distThresh, threshLevel, 255, cv.THRESH_BINARY);
+                            cv.threshold(dist, distThresh, maxVal * 0.45, 255, cv.THRESH_BINARY);
                             
                             let distThresh8U = new cv.Mat();
                             distThresh.convertTo(distThresh8U, cv.CV_8U);
@@ -709,6 +399,7 @@
                             cv.findContours(distThresh8U, peakContours, peakHierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
                             
                             if (peakContours.size() > 1) {
+                                // Jika terdeteksi lebih dari satu puncak, hitung sebagai multi-part menempel
                                 for (let j = 0; j < peakContours.size(); ++j) {
                                     let peakContour = peakContours.get(j);
                                     let M = cv.moments(peakContour);
@@ -728,7 +419,7 @@
                                 }
                             }
                             
-                            tempContours.delete();
+                            tempConts.delete();
                             mask.delete();
                             contourRoi.delete();
                             maskRoi.delete();
@@ -739,6 +430,7 @@
                             peakContours.delete();
                             peakHierarchy.delete();
                         } else {
+                            // Part tunggal normal
                             let M = cv.moments(contour);
                             if (M.m00 !== 0) {
                                 let cx = (M.m10 / M.m00) + roiX;
@@ -749,7 +441,7 @@
                     }
                 }
 
-                // FILTER ANTI-DOUBLE-COUNT
+                // 7. FILTER INTEGRASI ANTI-DOUBLE-COUNT
                 let finalCenters = [];
                 for (let i = 0; i < rawCenters.length; i++) {
                     let pt = rawCenters[i];
@@ -771,31 +463,32 @@
                     }
                 }
 
+                // Menggambar penanda final di layar canvas
                 let count = 0;
                 for (let i = 0; i < finalCenters.length; i++) {
                     let pt = finalCenters[i];
-                    cv.circle(src, new cv.Point(pt.x, pt.y), 4, [0, 255, 0, 255], -1); 
-                    cv.circle(src, new cv.Point(pt.x, pt.y), 6, [0, 0, 0, 255], 2);  
+                    cv.circle(src, new cv.Point(pt.x, pt.y), 4, [34, 197, 94, 255], -1); // Isi hijau
+                    cv.circle(src, new cv.Point(pt.x, pt.y), 6, [0, 0, 0, 255], 1.5);   // Outline hitam
                     count++;
                 }
 
-                // GAMBAR VISUALISASI KOTAK FOKUS
-                let colorBorder = [59, 130, 246, 255]; 
-                let colorCorners = [34, 197, 94, 255]; 
+                // 8. RENDER BINGKAI SCANNING PROFESIONAL (Visual ROI)
+                let colorBorder = [59, 130, 246, 255]; // Biru modern
+                let colorCorners = [34, 197, 94, 255]; // Siku hijau terang
                 
                 cv.rectangle(src, new cv.Point(roiX, roiY), new cv.Point(roiX + roiW, roiY + roiH), colorBorder, 1);
                 
                 let len = Math.min(roiW, roiH) * 0.08;
-                // Kiri Atas
+                // Siku Kiri Atas
                 cv.line(src, new cv.Point(roiX, roiY), new cv.Point(roiX + len, roiY), colorCorners, 3);
                 cv.line(src, new cv.Point(roiX, roiY), new cv.Point(roiX, roiY + len), colorCorners, 3);
-                // Kanan Atas
+                // Siku Kanan Atas
                 cv.line(src, new cv.Point(roiX + roiW, roiY), new cv.Point(roiX + roiW - len, roiY), colorCorners, 3);
                 cv.line(src, new cv.Point(roiX + roiW, roiY), new cv.Point(roiX + roiW, roiY + len), colorCorners, 3);
-                // Kiri Bawah
+                // Siku Kiri Bawah
                 cv.line(src, new cv.Point(roiX, roiY + roiH), new cv.Point(roiX + len, roiY + roiH), colorCorners, 3);
                 cv.line(src, new cv.Point(roiX, roiY + roiH), new cv.Point(roiX, roiY + roiH - len), colorCorners, 3);
-                // Kanan Bawah
+                // Siku Kanan Bawah
                 cv.line(src, new cv.Point(roiX + roiW, roiY + roiH), new cv.Point(roiX + roiW - len, roiY + roiH), colorCorners, 3);
                 cv.line(src, new cv.Point(roiX + roiW, roiY + roiH), new cv.Point(roiX + roiW, roiY + roiH - len), colorCorners, 3);
 
@@ -805,70 +498,29 @@
             } catch (err) {
                 console.error("OpenCV Error:", err);
             } finally {
+                // Garbage Collection OpenCV manual
                 if (src && !src.isDeleted()) src.delete();
                 if (gray && !gray.isDeleted()) gray.delete();
                 if (roiGray && !roiGray.isDeleted()) roiGray.delete();
                 if (roiBlurred && !roiBlurred.isDeleted()) roiBlurred.delete();
                 if (roiThresh && !roiThresh.isDeleted()) roiThresh.delete();
+                if (tempThresh && !tempThresh.isDeleted()) tempThresh.delete();
                 if (kernel && !kernel.isDeleted()) kernel.delete();
                 if (contours && !contours.isDeleted()) contours.delete();
                 if (hierarchy && !hierarchy.isDeleted()) hierarchy.delete();
             }
         }
 
-        // --- INISIALISASI SETELAH DOM SELESAI DIBACA ---
+        // --- STREAMING_CHUNK:Initializing page setup and event binding... ---
+        // --- EVENT BINDING & INISIALISASI ---
         function init() {
-            // Mencegah setup ganda jika dipicu berulang
             if (window.proScannerInitialized) return;
             window.proScannerInitialized = true;
-
-            // Setup event listeners secara aman
-            if (ui.btnSettings) {
-                ui.btnSettings.addEventListener('click', () => {
-                    isSettingsOpen = !isSettingsOpen;
-                    if (isSettingsOpen) {
-                        if (ui.panelSettings) ui.panelSettings.classList.remove('hidden');
-                        ui.btnSettings.classList.replace('bg-gray-800', 'bg-blue-600');
-                        ui.btnSettings.classList.replace('text-gray-300', 'text-white');
-                    } else {
-                        if (ui.panelSettings) ui.panelSettings.classList.add('hidden');
-                        ui.btnSettings.classList.replace('bg-blue-600', 'bg-gray-800');
-                        ui.btnSettings.classList.replace('text-white', 'text-gray-300');
-                    }
-                });
-            }
-
-            if (ui.btnNear) ui.btnNear.addEventListener('click', () => setDistancePreset('near'));
-            if (ui.btnFar) ui.btnFar.addEventListener('click', () => setDistancePreset('far'));
 
             if (ui.camSelect) {
                 ui.camSelect.addEventListener('change', (e) => {
                     currentFacingMode = e.target.value;
                     startCamera();
-                });
-            }
-
-            if (ui.btnTorch) {
-                ui.btnTorch.addEventListener('click', async () => {
-                    if (!stream) return;
-                    const track = stream.getVideoTracks()[0];
-                    try {
-                        isTorchOn = !isTorchOn;
-                        await track.applyConstraints({
-                            advanced: [{ torch: isTorchOn }]
-                        });
-                        
-                        if (isTorchOn) {
-                            ui.btnTorch.classList.replace('bg-black/60', 'bg-yellow-500');
-                            ui.btnTorch.classList.replace('text-white', 'text-gray-900');
-                        } else {
-                            ui.btnTorch.classList.replace('bg-yellow-500', 'bg-black/60');
-                            ui.btnTorch.classList.replace('text-gray-900', 'text-white');
-                        }
-                    } catch (e) {
-                        console.error("Gagal mengontrol senter:", e);
-                        showNotification("Browser tidak mengizinkan akses ke fitur senter (flashlight) perangkat.");
-                    }
                 });
             }
 
@@ -900,81 +552,6 @@
                 });
             }
 
-            if (ui.chkAuto) {
-                ui.chkAuto.addEventListener('change', (e) => {
-                    autoPrecision = e.target.checked;
-                    if (ui.manualThreshCont) ui.manualThreshCont.classList.toggle('hidden', autoPrecision);
-                    triggerProcess();
-                });
-            }
-
-            if (ui.chkAspect) {
-                ui.chkAspect.addEventListener('change', (e) => {
-                    aspectFilter = e.target.checked;
-                    triggerProcess();
-                });
-            }
-
-            if (ui.chkSplitTouch) {
-                ui.chkSplitTouch.addEventListener('change', (e) => {
-                    splitTouchEnabled = e.target.checked;
-                    const container = document.getElementById('splitControlsContainer');
-                    if (container) container.classList.toggle('hidden', !splitTouchEnabled);
-                    triggerProcess();
-                });
-            }
-
-            if (ui.chkShadow) {
-                ui.chkShadow.addEventListener('change', (e) => {
-                    shadowFilterEnabled = e.target.checked;
-                    if (ui.shadowControls) ui.shadowControls.classList.toggle('hidden', !shadowFilterEnabled);
-                    triggerProcess();
-                });
-            }
-
-            if (ui.rngShadowThresh) {
-                ui.rngShadowThresh.addEventListener('input', (e) => {
-                    shadowThreshold = parseInt(e.target.value);
-                    if (ui.valShadowThresh) ui.valShadowThresh.innerText = shadowThreshold + " StdDev";
-                    triggerProcess();
-                });
-            }
-
-            if (ui.rngMergeDist) {
-                ui.rngMergeDist.addEventListener('input', (e) => {
-                    mergeDist = parseInt(e.target.value);
-                    if (ui.valMergeDist) ui.valMergeDist.innerText = mergeDist + " px";
-                    triggerProcess();
-                });
-            }
-
-            if (ui.rngRoiW) {
-                ui.rngRoiW.addEventListener('input', (e) => {
-                    roiWidthPercent = parseInt(e.target.value);
-                    if (ui.valRoiW) ui.valRoiW.innerText = roiWidthPercent + "%";
-                    triggerProcess();
-                });
-            }
-
-            if (ui.rngRoiH) {
-                ui.rngRoiH.addEventListener('input', (e) => {
-                    roiHeightPercent = parseInt(e.target.value);
-                    if (ui.valRoiH) ui.valRoiH.innerText = roiHeightPercent + "%";
-                    triggerProcess();
-                });
-            }
-
-            if (ui.rngThresh) {
-                ui.rngThresh.addEventListener('input', (e) => {
-                    thresholdValue = e.target.value;
-                    if (ui.valThresh) ui.valThresh.innerText = thresholdValue;
-                    triggerProcess();
-                });
-            }
-
-            if (ui.btnLight) ui.btnLight.addEventListener('click', () => updateColorMode(true));
-            if (ui.getBtnDark) ui.getBtnDark.addEventListener('click', () => updateColorMode(false));
-
             if (ui.imgSrc) {
                 ui.imgSrc.addEventListener('load', () => {
                     if(cvReady) processImage();
@@ -995,20 +572,9 @@
                     }
                 });
             }
-
-            if (ui.selMaterial) ui.selMaterial.addEventListener('change', updateCalibration);
-            if (ui.rngPartDim) {
-                ui.rngPartDim.addEventListener('input', (e) => {
-                    if (ui.valPartDim) ui.valPartDim.innerText = e.target.value + " mm";
-                    updateCalibration();
-                });
-            }
-
-            // Inisialisasi awal database kalibrasi secara aman
-            updateCalibration();
         }
 
-        // Jalankan init() saat dokumen HTML telah siap dibaca browser
+        // Jalankan inisialisasi setelah seluruh DOM siap
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
         } else {
