@@ -255,7 +255,7 @@
         function processImage() {
             if (!cvReady || !currentImageLoaded || !ui.imgSrc || !ui.canvas) return;
             
-            let img, src, gray, blurred, tempThresh, kernel, contours, hierarchy;
+            let img, src, gray, blurred, tempThresh, contours, hierarchy;
             let roiGray, roiBlurred, roiThresh;
             
             try {
@@ -297,13 +297,15 @@
                 // 2. DETEKSI WARNA LATAR OTOMATIS (Auto-Background Calibration)
                 // Mengambil sampel kecerahan di area sudut latar untuk menentukan tipe thresholding
                 let backgroundMean = 0;
-                let sampleSize = Math.min(10, roiGray.cols, roiGray.rows);
+                let sampleSize = Math.min(15, roiGray.cols, roiGray.rows);
                 let sampleSum = 0;
                 let sampleCount = 0;
+                // Sampling di beberapa titik sudut ROI secara stabil
                 for (let r = 0; r < sampleSize; r++) {
                     for (let c = 0; c < sampleSize; c++) {
-                        sampleSum += roiGray.ucharAt(r, c);
-                        sampleCount++;
+                        sampleSum += roiGray.ucharAt(r, c); // Kiri Atas
+                        sampleSum += roiGray.ucharAt(roiGray.rows - 1 - r, roiGray.cols - 1 - c); // Kanan Bawah
+                        sampleCount += 2;
                     }
                 }
                 backgroundMean = sampleSum / sampleCount;
@@ -313,55 +315,70 @@
                 let isLightOnDark = (backgroundMean < 127);
                 let threshType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
 
-                // 3. ADAPTIVE BINARIZATION
+                // 3. ADAPTIVE BINARIZATION DENGAN WINDOW LEBIH BESAR
+                // Menggunakan blockSize=25 (sebelumnya 15) agar bagian dalam logam baut perak yang mengkilap
+                // tidak berlubang (mengurangi specular hollow effect secara drastis)
                 roiThresh = new cv.Mat();
-                cv.adaptiveThreshold(roiBlurred, roiThresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, threshType, 15, 5);
+                cv.adaptiveThreshold(roiBlurred, roiThresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, threshType, 25, 4);
 
-                // 4. PRE-CALIBRATION CONTOUR ANALYSIS
-                // Menemukan bentuk-bentuk awal untuk menganalisis dimensi target baut/part secara cerdas
-                tempThresh = roiThresh.clone();
-                kernel = cv.Mat.ones(3, 3, cv.CV_8U);
-                cv.morphologyEx(tempThresh, tempThresh, cv.MORPH_OPEN, kernel);
+                // 4. MORFOLOGI PENUTUPAN UNTUK MENYATUKAN PANTULAN LOGAM (Fusing Specular Highlights)
+                // Menggunakan ellipse kernel dinamis (sekitar 7x7) untuk menutup keretakan visual pada baut mengkilap
+                let kSize = Math.max(5, Math.round(Math.min(roiW, roiH) * 0.015)); 
+                if (kSize % 2 === 0) kSize += 1; // Wajib ganjil
+                
+                let kClose = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(kSize, kSize));
+                let kOpen = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(3, 3));
+                
+                cv.morphologyEx(roiThresh, roiThresh, cv.MORPH_CLOSE, kClose);
+                cv.morphologyEx(roiThresh, roiThresh, cv.MORPH_OPEN, kOpen);
+                
+                kClose.delete();
+                kOpen.delete();
 
+                // 5. ANALISIS KONTUR & ESTIMASI DIMENSI PINTAR
                 contours = new cv.MatVector();
                 hierarchy = new cv.Mat();
-                cv.findContours(tempThresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+                cv.findContours(roiThresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
                 let candidateAreas = [];
                 for (let i = 0; i < contours.size(); i++) {
                     let area = cv.contourArea(contours.get(i));
-                    // Mengabaikan noise sangat kecil (<20px) dan area background raksasa (>20% total layar)
-                    if (area > 20 && area < (roiW * roiH * 0.2)) {
+                    // Mengabaikan noise sangat kecil (<100px setelah MORPH_CLOSE) dan area background raksasa (>25% total layar)
+                    if (area > 100 && area < (roiW * roiH * 0.25)) {
                         candidateAreas.push(area);
                     }
                 }
 
-                // 5. KALIBRATOR DIMENSI MATEMATIS (Auto-Scaling)
-                // Mencari nilai Median Area sebagai representasi ukuran valid satu buah part
-                let medianArea = 150; // Fallback jika tidak terdeteksi
+                // 6. KALIBRATOR DIMENSI MATEMATIS AMAN (Preventing Extreme Sizing)
+                let medianArea = Math.round(roiW * roiH * 0.003); // Sane fallback (~0.3% of ROI)
                 if (candidateAreas.length > 0) {
                     candidateAreas.sort((a, b) => a - b);
                     let mid = Math.floor(candidateAreas.length / 2);
                     medianArea = (candidateAreas.length % 2 !== 0) ? candidateAreas[mid] : (candidateAreas[mid - 1] + candidateAreas[mid]) / 2;
                 }
 
-                // Mengunci rentang minimal dan maksimal secara dinamis berbasis deviasi part
-                let minArea = Math.max(15, Math.round(medianArea * 0.35));
-                let maxArea = Math.round(medianArea * 3.5);
+                // Pengaman batas area agar medianArea tidak jatuh terlalu rendah akibat sisa bintik noise/kilau
+                let minSaneArea = Math.round(roiW * roiH * 0.001); 
+                let maxSaneArea = Math.round(roiW * roiH * 0.05);  
+                medianArea = Math.max(minSaneArea, Math.min(medianArea, maxSaneArea));
+
+                let minArea = Math.max(30, Math.round(medianArea * 0.35)); // Batas bawah filter noise
+                let maxArea = Math.round(medianArea * 6.0); // Batas atas
                 let partSize = medianArea;
 
                 // Menentukan jarak anti-double-counting (mergeDist) secara adaptif dari diameter part
+                // Menggunakan faktor 0.55 untuk toleransi ekstra pada sekrup memanjang (kepala dan ulir menyatu)
                 let medianDiameter = 2 * Math.sqrt(medianArea / Math.PI);
-                let mergeDist = Math.max(8, Math.round(medianDiameter * 0.4));
+                let mergeDist = Math.max(12, Math.round(medianDiameter * 0.55));
 
-                // 6. PIPELINE UTAMA: FILTERING & CLUMP SPLITTING
+                // 7. PIPELINE UTAMA: FILTERING & CLUMP SPLITTING
                 let rawCenters = [];
                 for (let i = 0; i < contours.size(); ++i) {
                     let contour = contours.get(i);
                     let area = cv.contourArea(contour);
                     
                     if (area >= minArea && area <= maxArea) {
-                        // Saring kontur garis tipis atau panjang (bukan part padat bulat)
+                        // Saring kontur garis tipis atau panjang (bukan part padat/bulat/silinder)
                         let boundRect = cv.boundingRect(contour);
                         let aspect = boundRect.width / boundRect.height;
                         if (aspect > 4.0 || aspect < 0.25) {
@@ -441,7 +458,7 @@
                     }
                 }
 
-                // 7. FILTER INTEGRASI ANTI-DOUBLE-COUNT
+                // 8. FILTER INTEGRASI ANTI-DOUBLE-COUNT (Merging Overlapping Centroids)
                 let finalCenters = [];
                 for (let i = 0; i < rawCenters.length; i++) {
                     let pt = rawCenters[i];
@@ -467,12 +484,12 @@
                 let count = 0;
                 for (let i = 0; i < finalCenters.length; i++) {
                     let pt = finalCenters[i];
-                    cv.circle(src, new cv.Point(pt.x, pt.y), 4, [34, 197, 94, 255], -1); // Isi hijau
+                    cv.circle(src, new cv.Point(pt.x, pt.y), 4, [34, 197, 94, 255], -1); // Isi hijau terang
                     cv.circle(src, new cv.Point(pt.x, pt.y), 6, [0, 0, 0, 255], 1.5);   // Outline hitam
                     count++;
                 }
 
-                // 8. RENDER BINGKAI SCANNING PROFESIONAL (Visual ROI)
+                // 9. RENDER BINGKAI SCANNING PROFESIONAL (Visual ROI)
                 let colorBorder = [59, 130, 246, 255]; // Biru modern
                 let colorCorners = [34, 197, 94, 255]; // Siku hijau terang
                 
@@ -498,7 +515,7 @@
             } catch (err) {
                 console.error("OpenCV Error:", err);
             } finally {
-                // Garbage Collection OpenCV manual
+                // Garbage Collection OpenCV manual untuk kestabilan memori HP
                 if (src && !src.isDeleted()) src.delete();
                 if (gray && !gray.isDeleted()) gray.delete();
                 if (roiGray && !roiGray.isDeleted()) roiGray.delete();
@@ -511,7 +528,6 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Initializing page setup and event binding... ---
         // --- EVENT BINDING & INISIALISASI ---
         function init() {
             if (window.proScannerInitialized) return;
