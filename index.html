@@ -63,7 +63,7 @@
                 
                 <!-- Tombol Senter HP (Torch) -->
                 <button id="btnTorch" class="hidden bg-black/70 text-white p-2.5 rounded-full border border-gray-700 backdrop-blur-md active:scale-95 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17a3 3 0 1 1-6 0c0-2.2 2.2-4 3-6 .8 2 3 3.8 3 6Z"/><path d="M18 6h-2V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17a3 3 0 1 1-6 0c0-2.2 2.2-4 3-6 .8 2 3 3.8 3 6Z"/><path d="M18 6h-2V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Z"/></svg>
                 </button>
             </div>
             
@@ -256,7 +256,7 @@
             if (!cvReady || !currentImageLoaded || !ui.imgSrc || !ui.canvas) return;
             
             let img, src, gray, blurred, tempThresh, contours, hierarchy;
-            let roiGray, roiBlurred, roiThresh;
+            let roiGray, roiBlurred, roiThresh, preprocessedGray;
             
             try {
                 img = cv.imread(ui.imgSrc);
@@ -290,17 +290,11 @@
                 // Isolasi area kerja di dalam kotak saja
                 roiGray = gray.roi(rectRoi);
 
-                // Reduksi bintik-bintik debu ringan menggunakan Median Blur halus
-                roiBlurred = new cv.Mat();
-                cv.medianBlur(roiGray, roiBlurred, 5);
-
                 // 2. DETEKSI WARNA LATAR OTOMATIS (Auto-Background Calibration)
-                // Mengambil sampel kecerahan di area sudut latar untuk menentukan tipe thresholding
                 let backgroundMean = 0;
                 let sampleSize = Math.min(15, roiGray.cols, roiGray.rows);
                 let sampleSum = 0;
                 let sampleCount = 0;
-                // Sampling di beberapa titik sudut ROI secara stabil
                 for (let r = 0; r < sampleSize; r++) {
                     for (let c = 0; c < sampleSize; c++) {
                         sampleSum += roiGray.ucharAt(r, c); // Kiri Atas
@@ -310,29 +304,38 @@
                 }
                 backgroundMean = sampleSum / sampleCount;
                 
-                // Jika warna rata-rata < 127 (latar gelap/pad hitam), target objek adalah terang (Light On Dark)
-                // Jika sebaliknya (kertas HVS putih), target objek adalah gelap (Dark On Light)
                 let isLightOnDark = (backgroundMean < 127);
                 let threshType = isLightOnDark ? cv.THRESH_BINARY : cv.THRESH_BINARY_INV;
 
-                // 3. ADAPTIVE BINARIZATION DENGAN WINDOW LEBIH BESAR
-                // Menggunakan blockSize=25 (sebelumnya 15) agar bagian dalam logam baut perak yang mengkilap
-                // tidak berlubang (mengurangi specular hollow effect secara drastis)
-                roiThresh = new cv.Mat();
-                cv.adaptiveThreshold(roiBlurred, roiThresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, threshType, 25, 4);
+                // 3. REMOVE SPECULAR HIGHLIGHTS & VALLEYS (Wajib untuk Logam/Baut Mengkilap)
+                // Grayscale Morphological Open/Close secara ajaib meleburkan bintik kilau putih logam
+                // agar sekrup menyatu padat dengan warna aslinya tanpa lubang di tengah
+                let morphKernelSize = Math.max(5, Math.round(Math.min(roiW, roiH) * 0.025));
+                if (morphKernelSize % 2 === 0) morphKernelSize += 1; // Wajib Ganjil
+                let grayKernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(morphKernelSize, morphKernelSize));
 
-                // 4. MORFOLOGI PENUTUPAN UNTUK MENYATUKAN PANTULAN LOGAM (Fusing Specular Highlights)
-                // Menggunakan ellipse kernel dinamis (sekitar 7x7) untuk menutup keretakan visual pada baut mengkilap
-                let kSize = Math.max(5, Math.round(Math.min(roiW, roiH) * 0.015)); 
-                if (kSize % 2 === 0) kSize += 1; // Wajib ganjil
-                
-                let kClose = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(kSize, kSize));
+                preprocessedGray = new cv.Mat();
+                if (isLightOnDark) {
+                    // Latar gelap: tutup lembah bayangan gelap di dalam objek terang
+                    cv.morphologyEx(roiGray, preprocessedGray, cv.MORPH_CLOSE, grayKernel);
+                } else {
+                    // Latar terang: buka pantulan putih mengkilap di dalam sekrup gelap
+                    cv.morphologyEx(roiGray, preprocessedGray, cv.MORPH_OPEN, grayKernel);
+                }
+                grayKernel.delete();
+
+                // Reduksi bintik-bintik debu ringan menggunakan Median Blur halus
+                roiBlurred = new cv.Mat();
+                cv.medianBlur(preprocessedGray, roiBlurred, 5);
+
+                // 4. OTSU'S GLOBAL THRESHOLDING
+                // Menemukan batas pemisah bimodal (kertas putih vs baut gelap) secara mutlak tanpa noise adaptif
+                roiThresh = new cv.Mat();
+                cv.threshold(roiBlurred, roiThresh, 0, 255, threshType | cv.THRESH_OTSU);
+
+                // Morfologi Opening kecil untuk membersihkan sisa debu mikro
                 let kOpen = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(3, 3));
-                
-                cv.morphologyEx(roiThresh, roiThresh, cv.MORPH_CLOSE, kClose);
                 cv.morphologyEx(roiThresh, roiThresh, cv.MORPH_OPEN, kOpen);
-                
-                kClose.delete();
                 kOpen.delete();
 
                 // 5. ANALISIS KONTUR & ESTIMASI DIMENSI PINTAR
@@ -343,7 +346,7 @@
                 let candidateAreas = [];
                 for (let i = 0; i < contours.size(); i++) {
                     let area = cv.contourArea(contours.get(i));
-                    // Mengabaikan noise sangat kecil (<100px setelah MORPH_CLOSE) dan area background raksasa (>25% total layar)
+                    // Mengabaikan noise sangat kecil (<100px) dan area background raksasa (>25% total layar)
                     if (area > 100 && area < (roiW * roiH * 0.25)) {
                         candidateAreas.push(area);
                     }
@@ -367,9 +370,9 @@
                 let partSize = medianArea;
 
                 // Menentukan jarak anti-double-counting (mergeDist) secara adaptif dari diameter part
-                // Menggunakan faktor 0.55 untuk toleransi ekstra pada sekrup memanjang (kepala dan ulir menyatu)
+                // Nilai dikurangi ke 0.40 agar tidak melindas sekrup yang posisinya sangat dekat
                 let medianDiameter = 2 * Math.sqrt(medianArea / Math.PI);
-                let mergeDist = Math.max(12, Math.round(medianDiameter * 0.55));
+                let mergeDist = Math.max(10, Math.round(medianDiameter * 0.40));
 
                 // 7. PIPELINE UTAMA: FILTERING & CLUMP SPLITTING
                 let rawCenters = [];
@@ -378,7 +381,7 @@
                     let area = cv.contourArea(contour);
                     
                     if (area >= minArea && area <= maxArea) {
-                        // Saring kontur garis tipis atau panjang (bukan part padat/bulat/silinder)
+                        // Saring kontur garis tipis atau panjang (bukan part padat)
                         let boundRect = cv.boundingRect(contour);
                         let aspect = boundRect.width / boundRect.height;
                         if (aspect > 4.0 || aspect < 0.25) {
@@ -521,6 +524,7 @@
                 if (roiGray && !roiGray.isDeleted()) roiGray.delete();
                 if (roiBlurred && !roiBlurred.isDeleted()) roiBlurred.delete();
                 if (roiThresh && !roiThresh.isDeleted()) roiThresh.delete();
+                if (preprocessedGray && !preprocessedGray.isDeleted()) preprocessedGray.delete();
                 if (tempThresh && !tempThresh.isDeleted()) tempThresh.delete();
                 if (kernel && !kernel.isDeleted()) kernel.delete();
                 if (contours && !contours.isDeleted()) contours.delete();
